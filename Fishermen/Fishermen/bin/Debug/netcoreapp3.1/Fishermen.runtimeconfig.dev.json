@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\hstua\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\hstua\\.nuget\\packages"
+    ]
+  }
+}
