@@ -7,16 +7,24 @@ using Microsoft.AspNetCore.Mvc;
 using Fishermen.Models;
 using System.Globalization;
 using MoreLinq;
+
 using System.Web;
+
+
+using Microsoft.Extensions.Configuration;
 
 
 namespace Fishermen.Controllers
 {
     public class TblHaulsController : Controller
     {
-        PhishermenContext fishHauls = new PhishermenContext();
+        private readonly PhishermenContext fishHauls;
 
-        
+        public TblHaulsController(PhishermenContext context)
+        {
+            fishHauls = context;
+        }
+
         [HttpGet]
         [Route("api/TopTenHaulsByDate")]
         //returns the best ten hauls on a given date

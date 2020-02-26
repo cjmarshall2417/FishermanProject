@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Fishermen.Models;
@@ -15,20 +16,18 @@ namespace Fishermen
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
-
-        public IConfiguration Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string text = System.IO.File.ReadAllText(path + "\\ConnectionString.txt");
             services.AddControllersWithViews();
-            services.AddDbContext<PhishermenContext>(options => options.UseSqlServer(text));
+            services.AddDbContext<PhishermenContext>(options => options.UseSqlServer(Configuration["Phishing"]));
+            Debug.WriteLine(Configuration["Phishing"]);
+            Debug.WriteLine("WROTE:");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
