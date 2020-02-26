@@ -8,28 +8,43 @@ using Fishermen.Models;
 using System.Globalization;
 using MoreLinq;
 
+using System.Web;
+
+
+using Microsoft.Extensions.Configuration;
+
+
 namespace Fishermen.Controllers
 {
     public class TblHaulsController : Controller
     {
-        PhishermenContext fishHauls = new PhishermenContext();
+        private readonly PhishermenContext fishHauls;
 
-        
+        public TblHaulsController(PhishermenContext context)
+        {
+            fishHauls = context;
+        }
+
         [HttpGet]
         [Route("api/TopTenHaulsByDate")]
         //returns the best ten hauls on a given date
-        public List<Tuple<int,string>> TopTenHaulsByDate(int month, int year)
+        public IActionResult TopTenHaulsByDate(int month, int year, bool ascendingSort)
         {
+            var url = GetUrlPath();
+            
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
             var topTenHauls = (from haul in hauls
                                join location in locations on haul.LocationId equals location.LocationId
-                               orderby haul.Caught descending
+                               orderby haul.Caught ascending
                                where haul.Month == month && haul.Year == year
-                               select new Tuple<int,string>(haul.Caught, location.AreaName))
-                              .Take(10).ToList();
+                               select new {Caught = haul.Caught, AreaNumber = location.AreaNumber, AreaName = location.AreaName });
 
-            return topTenHauls;
+            if (!ascendingSort)
+            {
+                topTenHauls = topTenHauls.OrderByDescending(h => h.Caught);
+            }
+            return Json(topTenHauls.Take(10).ToList());
         }
 
 
@@ -37,7 +52,7 @@ namespace Fishermen.Controllers
         //the 5 areas that historically have done the best in those systems during that month.
         [HttpGet]
         [Route("api/BestPlaceToFishDuringMonth")]
-        public IActionResult BestPlaceToFishDuringMonth(string[] listOfSystems, int month)
+        public IActionResult BestPlaceToFishDuringMonth(string[] listOfSystems, int month, int rows = 10)
         {
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
@@ -53,7 +68,7 @@ namespace Fishermen.Controllers
                              select new { 
                                 LocationID = haulGroup.Key,
                                 Sum = haulGroup.Sum(h => h.Caught) 
-                             }).Take(5);
+                             }).Take(rows);
 
             var results = top5Areas.ToList();
 
@@ -195,18 +210,20 @@ namespace Fishermen.Controllers
         }
         //this returns all the data we have with the only the most relevant columns included
         [HttpGet]
-        [Route("api/GetAllData")]
-        public IActionResult GetAllData()
+        [Route("api/CustomQuery")]
+        public IActionResult CustomQuery(int[] years, int[] months, 
+            int[] areaNumbers, string[] areaNames, string[] regions, string [] systems, 
+            int haulGreaterThan = -1, int haulLessThan = -1, int rows = 1000)
         {
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
-            var regions = fishHauls.TblRegions;
-            var systems = fishHauls.TblSystems;
+            var regionsTbl = fishHauls.TblRegions;
+            var systemsTbl = fishHauls.TblSystems;
 
             var allData = from haul in hauls
                           join location in locations on haul.LocationId equals location.LocationId
-                          join system in systems on location.LocationId equals system.SystemId
-                          join region in regions on location.LocationId equals region.RegionId
+                          join system in systemsTbl on location.SystemId equals system.SystemId
+                          join region in regionsTbl on location.RegionId equals region.RegionId
                           orderby haul.Year, haul.Month, location.AreaNumber
                           select new
                           {
@@ -219,7 +236,48 @@ namespace Fishermen.Controllers
                               Month = haul.Month
                           };
 
-            return Json(allData);
+            if(years.Count() > 0)
+            {
+                allData = allData.Where(h => years.Contains(h.Year));
+            }
+            if (months.Count() > 0)
+            {
+                allData = allData.Where(h => months.Contains(h.Month));
+            }
+            if(areaNames.Count() > 0)
+            {
+                allData = allData.Where(h => areaNames.Contains(h.AreaName));
+            }
+            if (areaNumbers.Count() > 0)
+            {
+                allData = allData.Where(h => areaNumbers.Contains(h.AreaNumber));
+            }
+            if(regions.Count() > 0)
+            {
+                allData = allData.Where(h => regions.Contains(h.Region));
+            }
+            if(systems.Count() > 0)
+            {
+                allData = allData.Where(h => systems.Contains(h.System));
+            }
+            if(haulGreaterThan != -1)
+            {
+                allData = allData.Where(h => h.FishCaught > haulGreaterThan);
+            }
+            if (haulLessThan != -1)
+            {
+                allData = allData.Where(h => h.FishCaught < haulLessThan);
+            }
+
+            return Json(allData.Take(rows));
+        }
+
+       
+
+        [NonAction]
+        public string GetUrlPath()
+        {
+            return HttpContext.Request.Path.Value + HttpContext.Request.QueryString.Value;
         }
 
     }

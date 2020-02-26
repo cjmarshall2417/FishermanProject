@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Configuration;
 
 namespace Fishermen.Models
 {
@@ -9,7 +11,6 @@ namespace Fishermen.Models
         public PhishermenContext()
         {
         }
-
         public PhishermenContext(DbContextOptions<PhishermenContext> options)
             : base(options)
         {
@@ -19,17 +20,8 @@ namespace Fishermen.Models
         public virtual DbSet<TblLocations> TblLocations { get; set; }
         public virtual DbSet<TblRegions> TblRegions { get; set; }
         public virtual DbSet<TblSystems> TblSystems { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                string text = System.IO.File.ReadAllText(path + "\\ConnectionString.txt");
-
-                optionsBuilder.UseSqlServer(text);
-            }
-        }
+        public IConfiguration Configuration { get; }
+       
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

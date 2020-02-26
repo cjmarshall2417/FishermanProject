@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Fishermen.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.Azure.KeyVault;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +12,7 @@ namespace Fishermen
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -22,20 +20,14 @@ namespace Fishermen
 
         private const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-        public IConfiguration Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy(MyAllowSpecificOrigins,
-                    builder => { builder.WithOrigins("http://localhost:3000"); });
-            });
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            string text = System.IO.File.ReadAllText(path + "\\ConnectionString.txt");
+            string secretUri = "https://phishermen.vault.azure.net/secrets/Phishing/7f85a155194d43cc80dea03cf1df6cf4";
+            var kv = new KeyVaultClient(Utils.Utils.GetAccessToken);
+            var sec = kv.GetSecretAsync(secretUri).Result;
             services.AddControllersWithViews();
-            services.AddDbContext<PhishermenContext>(options => options.UseSqlServer(text));
+            services.AddDbContext<PhishermenContext>(options => options.UseSqlServer(sec.Value));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
