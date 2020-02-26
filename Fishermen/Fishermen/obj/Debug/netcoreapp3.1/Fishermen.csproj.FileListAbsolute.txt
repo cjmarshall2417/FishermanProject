@@ -398,3 +398,4 @@ C:\Users\hstua\OneDrive\Desktop\CodeSmart Fish Repo\Phisherman\FishermanProject\
 C:\Users\hstua\OneDrive\Desktop\CodeSmart Fish Repo\Phisherman\FishermanProject\Fishermen\Fishermen\obj\Debug\netcoreapp3.1\Fishermen.csproj.CopyComplete
 C:\Users\hstua\OneDrive\Desktop\CodeSmart Fish Repo\Phisherman\FishermanProject\Fishermen\Fishermen\obj\Debug\netcoreapp3.1\Fishermen.dll
 C:\Users\hstua\OneDrive\Desktop\CodeSmart Fish Repo\Phisherman\FishermanProject\Fishermen\Fishermen\obj\Debug\netcoreapp3.1\Fishermen.pdb
+C:\Users\hstua\OneDrive\Desktop\CodeSmart Fish Repo\Phisherman\FishermanProject\Fishermen\Fishermen\obj\Debug\netcoreapp3.1\Razor\Views\Home\CustomQuery.cshtml.g.cs
