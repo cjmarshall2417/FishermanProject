@@ -12,5 +12,10 @@ namespace Fishermen.Controllers
         {
             return View();
         }
+
+        public IActionResult CustomQuery()
+        {
+            return View();
+        }
     }
 }
