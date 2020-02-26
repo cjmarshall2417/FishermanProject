@@ -86,7 +86,6 @@ namespace Fishermen.Controllers
                              join location in locations on haul.LocationId equals location.LocationId
                              where location.AreaNumber == areaNumber
                              group haul by haul.Month into haulGroup
-                             orderby haulGroup.Sum(h => h.Caught) descending
                              select new {Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(haulGroup.Key), FishCaught = haulGroup.Sum(h => h.Caught) });
             
             return Json(bestMonth);
