@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Fishermen.Models;
+using Fishermen.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.Azure.KeyVault;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,8 +26,17 @@ namespace Fishermen
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            /* if (Env.IsDevelopment)
+          {
+
+          }*/
+            //Utils.Utils ut = new Utils.Utils();
+            string secretUri = "https://phishermen.vault.azure.net/secrets/Phishing/7f85a155194d43cc80dea03cf1df6cf4";
+            var kv = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(Utils.Utils.GetAccessToken));
+            Console.WriteLine(kv);
+            var sec = kv.GetSecretAsync(secretUri).Result;
             services.AddControllersWithViews();
-            services.AddDbContext<PhishermenContext>(options => options.UseSqlServer(Configuration["Phishing"]));
+            services.AddDbContext<PhishermenContext>(options => options.UseSqlServer(sec.Value));
             Debug.WriteLine(Configuration["Phishing"]);
             Debug.WriteLine("WROTE:");
         }
