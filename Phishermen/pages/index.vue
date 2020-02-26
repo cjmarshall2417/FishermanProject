@@ -1,75 +1,122 @@
 <template>
-  <v-layout column justify-center align-center>
-    <v-flex xs12 sm8 md6>
-      <div class="text-center">
-        <logo />
-        <vuetify-logo />
-      </div>
-      <v-card>
-        <v-card-title class="headline">
-          Welcome to the Vuetify + Nuxt.js template
-        </v-card-title>
-        <v-card-text>
-          <p>
-            Vuetify is a progressive Material Design component framework for
-            Vue.js. It was designed to empower developers to create amazing
-            applications.
-          </p>
-          <p>
-            For more information on Vuetify, check out the
-            <a href="https://vuetifyjs.com" target="_blank"> documentation </a>.
-          </p>
-          <p>
-            If you have questions, please join the official
-            <a href="https://chat.vuetifyjs.com/" target="_blank" title="chat">
-              discord </a
-            >.
-          </p>
-          <p>
-            Find a bug? Report it on the github
-            <a
-              href="https://github.com/vuetifyjs/vuetify/issues"
-              target="_blank"
-              title="contribute"
-            >
-              issue board </a
-            >.
-          </p>
-          <p>
-            Thank you for developing with Vuetify and I look forward to bringing
-            more exciting features in the future.
-          </p>
-          <div class="text-xs-right">
-            <em><small>&mdash; John Leider</small></em>
-          </div>
-          <hr class="my-3" />
-          <a href="https://nuxtjs.org/" target="_blank">
-            Nuxt Documentation
-          </a>
-          <br />
-          <a href="https://github.com/nuxt/nuxt.js" target="_blank">
-            Nuxt GitHub
-          </a>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn color="primary" nuxt to="/inspire">
-            Continue
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-flex>
-  </v-layout>
+  <v-card color="red lighten-2" dark>
+    <v-card-title class="headline red lighten-3">
+      Search for Public APIs
+    </v-card-title>
+    <v-card-text>
+      Explore hundreds of free API's ready for consumption! For more information
+      visit
+      <a
+        class="grey--text text--lighten-3"
+        href="https://github.com/toddmotto/public-apis"
+        target="_blank"
+        >the Github repository</a
+      >.
+    </v-card-text>
+    <v-card-text>
+      <v-autocomplete
+        v-model="model"
+        :items="items"
+        :loading="isLoading"
+        :search-input.sync="search"
+        color="white"
+        hide-no-data
+        hide-selected
+        filled
+        chips
+        multiple
+        item-text="areaName"
+        item-value="areaNumber"
+        label="Public APIs"
+        placeholder="Start typing to Search"
+        prepend-icon="mdi-database-search"
+        return-object
+      >
+        <template v-slot:selection="data">
+          <v-chip
+            v-bind="data.attrs"
+            :input-value="data.selected"
+            close
+            @click="data.select"
+            @click:close="remove(data.item)"
+          >
+            {{ data.item.areaName }}
+          </v-chip>
+        </template>
+      </v-autocomplete>
+    </v-card-text>
+    <v-card-actions>
+      <v-btn @click="submit">
+        Submit
+      </v-btn>
+      <v-spacer></v-spacer>
+      <v-btn :disabled="!model" color="grey darken-3" @click="model = null">
+        Clear
+        <v-icon right>mdi-close-circle</v-icon>
+      </v-btn>
+    </v-card-actions>
+  </v-card>
 </template>
 
 <script>
-import Logo from '~/components/Logo.vue'
-import VuetifyLogo from '~/components/VuetifyLogo.vue'
-
 export default {
-  components: {
-    Logo,
-    VuetifyLogo
+  data: () => ({
+    descriptionLimit: 10,
+    entries: [],
+    isLoading: false,
+    model: null,
+    search: null
+  }),
+
+  computed: {
+    items() {
+      return this.entries
+      // return this.entries.map((entry) => {
+      //   const Description =
+      //     entry.areaName.length > this.descriptionLimit
+      //       ? entry.areaName.slice(0, this.descriptionLimit) + '...'
+      //       : entry.areaName
+      //
+      //   return Object.assign({}, entry, { Description })
+      // })
+    }
+  },
+
+  watch: {
+    search(val) {
+      // Items have already been loaded
+      // if (this.model !== null)
+      //   console.log(this.model.areaName + this.model.areaNumber)
+      if (this.items.length > 0) return
+
+      // Items have already been requested
+      if (this.isLoading) return
+
+      this.isLoading = true
+
+      // Lazily load input items
+      fetch('https://localhost:5001/api/GetAreas')
+        .then((res) => res.json())
+        .then((res) => {
+          // console.log(res)
+          // const { count, entries } = res
+          // this.count = count
+          this.entries = res
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+        .finally(() => (this.isLoading = false))
+    }
+  },
+  methods: {
+    submit() {
+      console.log(this.model)
+    },
+    remove(item) {
+      const index = this.model.findIndex((a) => a.areaName === item.areaName)
+      if (index >= 0) this.model.splice(index, 1)
+    }
   }
 }
 </script>

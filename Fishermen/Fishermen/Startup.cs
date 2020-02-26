@@ -20,11 +20,18 @@ namespace Fishermen
             Configuration = configuration;
         }
 
+        private const string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(MyAllowSpecificOrigins,
+                    builder => { builder.WithOrigins("http://localhost:3000"); });
+            });
             string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string text = System.IO.File.ReadAllText(path + "\\ConnectionString.txt");
             services.AddControllersWithViews();
@@ -48,9 +55,9 @@ namespace Fishermen
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            
             app.UseAuthorization();
-
+            app.UseCors(MyAllowSpecificOrigins);
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
