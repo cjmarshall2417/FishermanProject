@@ -23,6 +23,14 @@ namespace Fishermen
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(MyAllowSpecificOrigins,
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:3000");
+                    });
+            });
             string secretUri = "https://phishermen.vault.azure.net/secrets/Phishing/7f85a155194d43cc80dea03cf1df6cf4";
             var kv = new KeyVaultClient(Utils.Utils.GetAccessToken);
             var sec = kv.GetSecretAsync(secretUri).Result;
