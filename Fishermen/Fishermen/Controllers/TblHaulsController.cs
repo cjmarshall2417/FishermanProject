@@ -54,46 +54,31 @@ namespace Fishermen.Controllers
         [Route("api/BestPlaceToFishDuringMonth")]
         public IActionResult BestPlaceToFishDuringMonth(string[] listOfSystems, int month, int rows = 10)
         {
+            
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
             var systems = fishHauls.TblSystems;
            
 
-            var top5Areas = (from haul in hauls
+            var topAreas = (from haul in hauls
                              join location in locations on haul.LocationId equals location.LocationId
                              join system in systems on location.SystemId equals system.SystemId
                              where listOfSystems.Contains(system.SystemName) && haul.Month == month
-                             group haul by haul.LocationId into haulGroup
+                             group haul by new {AreaNumber = location.AreaNumber, AreaName = location.AreaName} into haulGroup
                              orderby haulGroup.Sum(h => h.Caught) descending
                              select new { 
-                                LocationID = haulGroup.Key,
+                                AreaNumber = haulGroup.Key.AreaNumber,
+                                AreaName = haulGroup.Key.AreaName,
                                 Sum = haulGroup.Sum(h => h.Caught) 
                              }).Take(rows);
 
-            var results = top5Areas.ToList();
-
-            var finalResults = new List<Tuple<int, string, int>>();
-            //trying to use the location ID to find the corresponding areaNumber and areaName in the original query
-            //behaves strangely, think it has something to do with the haulGroup.Key portion, it selects for every haulgroup.key
-            //instead of the current one, I'm not good enough at linq to deal with it so I did it this stupid way instead.
-            for(int i = 0; i < results.Count; i++)
-            {
-                var areaNumber = (from location in locations
-                                  where location.LocationId == results[i].LocationID
-                                  select location.AreaNumber).ToList()[0];
-                var areaName = (from location in locations
-                                  where location.LocationId == results[i].LocationID
-                                  select location.AreaName).ToList()[0];
-
-                finalResults.Add(Tuple.Create(areaNumber, areaName, results[i].Sum));
-            }
-            return Json(finalResults);
+            return Json(topAreas);
         }
 
         //tells you when the best time to fish in a certain area is
         [HttpGet]
         [Route("api/BestMonthInArea")]
-        public List<Tuple<string, int>> BestMonthInArea(int areaNumber)
+        public IActionResult BestMonthInArea(int areaNumber)
         {
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
@@ -102,13 +87,9 @@ namespace Fishermen.Controllers
                              where location.AreaNumber == areaNumber
                              group haul by haul.Month into haulGroup
                              orderby haulGroup.Sum(h => h.Caught) descending
-                             select new Tuple<string, int>(CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(haulGroup.Key), haulGroup.Sum(h => h.Caught)));
-                               
-                               
-                               //select new Tuple<int, string>(haul.Caught, location.AreaName))
-                              
+                             select new {Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(haulGroup.Key), FishCaught = haulGroup.Sum(h => h.Caught) });
             
-            return bestMonth.ToList();
+            return Json(bestMonth);
         }
 
         //returns the total fish caught per year in all areas
@@ -204,7 +185,7 @@ namespace Fishermen.Controllers
                               join location in locations on haul.LocationId equals location.LocationId
                               where location.AreaNumber == areaNumber
                               orderby haul.Year, haul.Month
-                              select new { haul.Month, haul.Year, haul.Caught };
+                              select new {Month = haul.Month, Year = haul.Year, Sum = haul.Caught };
 
             return Json(areaHistory.ToList());
         }
@@ -273,7 +254,7 @@ namespace Fishermen.Controllers
         }
 
        
-
+        //not currently needed but keeping it here for now.
         [NonAction]
         public string GetUrlPath()
         {

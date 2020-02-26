@@ -17,17 +17,28 @@
     <h1>CustomQuery</h1>
     <div id="app">
         <p>{{url}}</p>
-        <input style="width: 1000px" v-model="url" type="text" value="https://localhost:5001/api/CustomQuery?"/>
-        <button v-on:click="fillTable()">Refresh Table</button>
+        <input style="width: 1000px" v-model="url" type="text" value="https://localhost:5001/api/CustomQuery?" />
+        <button v-on:click="fillTable()">Refresh Table</button><br />
+        <select v-model="selectedYear">
+            <option disabled value="">Select a year</option>
+            <option v-for="year in validYears">{{year}}</option>
+        </select>
+        <button v-on:click="addYearFilter()">Add Year Filter</button>
+
+        <select v-model="selectedYear">
+            <option disabled value="">Select a year</option>
+            <option v-for="year in validYears">{{year}}</option>
+        </select>
+        <button v-on:click="addYearFilter()">Add Year Filter</button>
         <table>
             <tr>
-            <th>Year</th>
-            <th>Month</th>
-            <th>Area Number</th>
-            <th>Area Name</th>
-            <th>Fish Caught</th>
-            <th>System</th>
-            <th>Region</th>
+                <th>Year</th>
+                <th>Month</th>
+                <th>Area Number</th>
+                <th>Area Name</th>
+                <th>Fish Caught</th>
+                <th>System</th>
+                <th>Region</th>
             </tr>
             <tr v-for="haul in customQueryResults">
                 <td>{{haul["year"]}}</td>
@@ -51,7 +62,11 @@
         el: "#app",
         data: {
             customQueryResults: [],
-            url : "https://localhost:5001/api/CustomQuery?years=1964&regions=Coastal&months=1"
+            url: "../api/CustomQuery?years=1964&regions=Coastal&months=1",
+            validYears: [],
+            validYearsURL: "../api/GetYears",
+            validMonths: [],
+            validMonthsURL: "../api/GetMonths"
         },
         methods: {
             fillTable: function () {
@@ -65,10 +80,29 @@
                         }
                         this.customQueryResults = jsonResults;
                     })
+            },
+
+            getYears: function() {
+                this.$http.get(this.validYearsURL)
+                    .then(value => { return value.json(); })
+                    .then(jsonValue => {
+                        this.validYears = jsonValue;
+                    })
+            },
+
+            getMonths: function() {
+                this.$http.get(this.validMonthsURL)
+                    .then(value => { return value.json(); })
+                    .then(jsonValue => {
+                        this.validMonths = jsonValue;
+                    })
             }
+
+
         },
             mounted() {
-                this.fillTable()
+                this.fillTable();
+                this.getYears();
             }
 
     })
