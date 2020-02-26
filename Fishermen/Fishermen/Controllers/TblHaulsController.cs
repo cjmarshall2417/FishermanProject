@@ -7,10 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Fishermen.Models;
 using System.Globalization;
 using MoreLinq;
-
+using System.Text.Json;
 using System.Web;
-
-
 using Microsoft.Extensions.Configuration;
 
 
@@ -31,14 +29,14 @@ namespace Fishermen.Controllers
         public IActionResult TopTenHaulsByDate(int month, int year, bool ascendingSort)
         {
             var url = GetUrlPath();
-            
+
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
             var topTenHauls = (from haul in hauls
                                join location in locations on haul.LocationId equals location.LocationId
                                orderby haul.Caught ascending
                                where haul.Month == month && haul.Year == year
-                               select new {Caught = haul.Caught, AreaNumber = location.AreaNumber, AreaName = location.AreaName });
+                               select new { Caught = haul.Caught, AreaNumber = location.AreaNumber, AreaName = location.AreaName });
 
             if (!ascendingSort)
             {
@@ -54,23 +52,23 @@ namespace Fishermen.Controllers
         [Route("api/BestPlaceToFishDuringMonth")]
         public IActionResult BestPlaceToFishDuringMonth(string[] listOfSystems, int month, int rows = 10)
         {
-            
+
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
             var systems = fishHauls.TblSystems;
-           
+
 
             var topAreas = (from haul in hauls
-                             join location in locations on haul.LocationId equals location.LocationId
-                             join system in systems on location.SystemId equals system.SystemId
-                             where listOfSystems.Contains(system.SystemName) && haul.Month == month
-                             group haul by new {AreaNumber = location.AreaNumber, AreaName = location.AreaName} into haulGroup
-                             orderby haulGroup.Sum(h => h.Caught) descending
-                             select new { 
+                            join location in locations on haul.LocationId equals location.LocationId
+                            join system in systems on location.SystemId equals system.SystemId
+                            where listOfSystems.Contains(system.SystemName) && haul.Month == month
+                            group haul by new { AreaNumber = location.AreaNumber, AreaName = location.AreaName } into haulGroup
+                            orderby haulGroup.Sum(h => h.Caught) descending
+                            select new {
                                 AreaNumber = haulGroup.Key.AreaNumber,
                                 AreaName = haulGroup.Key.AreaName,
-                                Sum = haulGroup.Sum(h => h.Caught) 
-                             }).Take(rows);
+                                Sum = haulGroup.Sum(h => h.Caught)
+                            }).Take(rows);
 
             return Json(topAreas);
         }
@@ -86,8 +84,8 @@ namespace Fishermen.Controllers
                              join location in locations on haul.LocationId equals location.LocationId
                              where location.AreaNumber == areaNumber
                              group haul by haul.Month into haulGroup
-                             select new {Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(haulGroup.Key), FishCaught = haulGroup.Sum(h => h.Caught) });
-            
+                             select new { Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(haulGroup.Key), FishCaught = haulGroup.Sum(h => h.Caught) });
+
             return Json(bestMonth);
         }
 
@@ -115,8 +113,8 @@ namespace Fishermen.Controllers
             var areas = fishHauls.TblLocations;
             var areaNumbers = from area in areas
                               group area by new { area.AreaNumber, area.AreaName } into areaGroup
-                              select new {AreaNumber= areaGroup.Key.AreaNumber, AreaName = areaGroup.Key.AreaName};
-            
+                              select new { AreaNumber = areaGroup.Key.AreaNumber, AreaName = areaGroup.Key.AreaName };
+
             return Json(areaNumbers.ToList());
 
         }
@@ -154,8 +152,8 @@ namespace Fishermen.Controllers
         public IActionResult GetYears()
         {
             List<int> validYears = new List<int>();
-            
-            for(int i = 1961; i < 2018; i++)
+
+            for (int i = 1961; i < 2018; i++)
             {
                 validYears.Add(i);
             }
@@ -169,7 +167,14 @@ namespace Fishermen.Controllers
             var validMonths = DateTimeFormatInfo.CurrentInfo.MonthNames;
             //the previous variable has 13 values since some cultures have 13 months, so this is to remove the last null value
             validMonths = validMonths.Take(validMonths.Count() - 1).ToArray();
-            return Json(validMonths);
+
+            var validMonthObjectsAnon = new Object[12];
+            for(int i = 0; i < validMonths.Count(); i++)
+            {
+                validMonthObjectsAnon[i] = new {MonthNumber = i + 1, MonthName = validMonths[i] };
+            }
+            
+            return Json(validMonthObjectsAnon);
         }
 
         //returns the full haul history of a given area, requires area number instead of
@@ -184,15 +189,15 @@ namespace Fishermen.Controllers
                               join location in locations on haul.LocationId equals location.LocationId
                               where location.AreaNumber == areaNumber
                               orderby haul.Year, haul.Month
-                              select new {Month = haul.Month, Year = haul.Year, Sum = haul.Caught };
+                              select new { Month = haul.Month, Year = haul.Year, Sum = haul.Caught };
 
             return Json(areaHistory.ToList());
         }
         //this returns all the data we have with the only the most relevant columns included
         [HttpGet]
         [Route("api/CustomQuery")]
-        public IActionResult CustomQuery(int[] years, int[] months, 
-            int[] areaNumbers, string[] areaNames, string[] regions, string [] systems, 
+        public IActionResult CustomQuery(int[] years, int[] months,
+            int[] areaNumbers, string[] areaNames, string[] regions, string[] systems,
             int haulGreaterThan = -1, int haulLessThan = -1, int rows = 1000)
         {
             var hauls = fishHauls.TblHauls;
@@ -216,7 +221,7 @@ namespace Fishermen.Controllers
                               Month = haul.Month
                           };
 
-            if(years.Count() > 0)
+            if (years.Count() > 0)
             {
                 allData = allData.Where(h => years.Contains(h.Year));
             }
@@ -224,7 +229,7 @@ namespace Fishermen.Controllers
             {
                 allData = allData.Where(h => months.Contains(h.Month));
             }
-            if(areaNames.Count() > 0)
+            if (areaNames.Count() > 0)
             {
                 allData = allData.Where(h => areaNames.Contains(h.AreaName));
             }
@@ -232,15 +237,15 @@ namespace Fishermen.Controllers
             {
                 allData = allData.Where(h => areaNumbers.Contains(h.AreaNumber));
             }
-            if(regions.Count() > 0)
+            if (regions.Count() > 0)
             {
                 allData = allData.Where(h => regions.Contains(h.Region));
             }
-            if(systems.Count() > 0)
+            if (systems.Count() > 0)
             {
                 allData = allData.Where(h => systems.Contains(h.System));
             }
-            if(haulGreaterThan != -1)
+            if (haulGreaterThan != -1)
             {
                 allData = allData.Where(h => h.FishCaught > haulGreaterThan);
             }
@@ -252,13 +257,27 @@ namespace Fishermen.Controllers
             return Json(allData.Take(rows));
         }
 
-       
+
         //not currently needed but keeping it here for now.
         [NonAction]
         public string GetUrlPath()
         {
             return HttpContext.Request.Path.Value + HttpContext.Request.QueryString.Value;
         }
+
+        [Serializable]
+        public class MonthObject
+        {
+            public int monthNumber;
+            public string monthName;
+
+            public MonthObject(int MonthNumber, string MonthName)
+            {
+                this.monthName = MonthName;
+                this.monthNumber = MonthNumber;
+            }
+        }
+
 
     }
 }
