@@ -35,7 +35,7 @@ namespace Fishermen
             var kv = new KeyVaultClient(Utils.Utils.GetAccessToken);
             var sec = kv.GetSecretAsync(secretUri).Result;
             services.AddControllersWithViews();
-            services.AddDbContext<PhishermenContext>(options => options.UseSqlServer(sec.Value));
+            services.AddDbContext<phishermenContext>(options => options.UseSqlServer(sec.Value));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

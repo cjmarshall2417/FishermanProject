@@ -17,9 +17,9 @@ namespace Fishermen.Controllers
     public class TblHaulsController : Controller
     {
         public string[] months = new string[] { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
-        private readonly PhishermenContext fishHauls;
+        private readonly phishermenContext fishHauls;
 
-        public TblHaulsController(PhishermenContext context)
+        public TblHaulsController(phishermenContext context)
         {
             fishHauls = context;
         }
@@ -48,7 +48,7 @@ namespace Fishermen.Controllers
 
 
 
-        
+
         [HttpPost]
         [Route("api/BestPlaceToFishDuringMonth")]
         public IActionResult BestPlaceToFishDuringMonth(string[] listOfSystems, int month, int rows = 10)
@@ -87,16 +87,16 @@ namespace Fishermen.Controllers
                              group haul by haul.Month into haulGroup
                              select new { Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(haulGroup.Key)//converts a month number to a month name
                              , MonthNumber = haulGroup.Key
-                             ,FishCaught = haulGroup.Sum(h => h.Caught) / haulGroup.Count() });
+                             , FishCaught = haulGroup.Sum(h => h.Caught) / haulGroup.Count() });
 
             var bestMonthList = bestMonth.ToList();
-            if(bestMonthList.Count() != 12)
+            if (bestMonthList.Count() != 12)
             {
                 for (int i = 0; i < months.Count(); i++)
                 {
                     if (bestMonthList.FindIndex(m => m.Month == months[i]) == -1)
                     {
-                        bestMonthList.Add(new {Month = months[i], MonthNumber = i + 1, FishCaught = 0 });
+                        bestMonthList.Add(new { Month = months[i], MonthNumber = i + 1, FishCaught = 0 });
                     }
 
                 }
@@ -187,11 +187,11 @@ namespace Fishermen.Controllers
 
             var validMonthObjectsAnon = new Object[12];
             //add the month number to each month name.
-            for(int i = 0; i < validMonths.Count(); i++)
+            for (int i = 0; i < validMonths.Count(); i++)
             {
-                validMonthObjectsAnon[i] = new {MonthNumber = i + 1, MonthName = validMonths[i] };
+                validMonthObjectsAnon[i] = new { MonthNumber = i + 1, MonthName = validMonths[i] };
             }
-            
+
             return Json(validMonthObjectsAnon);
         }
 
@@ -279,7 +279,7 @@ namespace Fishermen.Controllers
             //checks for groupBys and applies them if necessary
             //lots of code needs to be duplicated because the grouped by data will be in slightly different formats
             //based on where we grouped by. This prevents me from defining the groupedData variable outside of the inner if statements
-            if(groupBy != "None")
+            if (groupBy != "None")
             {
                 if (groupBy == "Date")
                 {
@@ -290,12 +290,12 @@ namespace Fishermen.Controllers
                         //I'm using vague property names here to make this data easier to work with on the front end
                         //If the property names were different in each group by they would have to access the keys by index rather than
                         //by name like has been done in the rest of the queries.
-                        var result = groupedData.Select(g => new {GroupKey= g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
+                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
                         return Json(result);
                     }
                     else
                     {
-                        var result = groupedData.Select(g => new {GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught)});
+                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
                         return Json(result);
                     }
                 }
@@ -305,19 +305,19 @@ namespace Fishermen.Controllers
                     groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
-                        var result = groupedData.Select(g => new {GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
+                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
                         return Json(result);
                     }
                     else
                     {
-                        var result = groupedData.Select(g => new {GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
+                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
                         return Json(result);
                     }
                 }
                 else if (groupBy == "Year")
                 {
                     var groupedData = allData.GroupBy(h => h.Year);
-                    
+
                     if (average)
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
@@ -380,7 +380,11 @@ namespace Fishermen.Controllers
 
             return Json(allData.Take(rows));//now that we've done all the filtering we can apply our row count filter
         }
-
+        /*
+        [HttpPost]
+        public IActionResult SaveQuery() {
+            
+        }*/
 
         //not currently needed but keeping it here for now.
         [NonAction]
