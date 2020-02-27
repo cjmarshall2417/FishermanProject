@@ -26,7 +26,7 @@
         @click="data.select"
         @click:close="remove(data.item)"
       >
-        {{ data.item }}
+        {{ data.item[itemText] || data.item }}
       </v-chip>
     </template>
   </v-autocomplete>
