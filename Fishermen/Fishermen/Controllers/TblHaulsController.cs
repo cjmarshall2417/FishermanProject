@@ -47,9 +47,9 @@ namespace Fishermen.Controllers
         }
 
 
-        //this method answers the question that Luke gave as an example, you give a list of systems and a month and it returns
-        //the  areas that historically have done the best in those systems during that month.
-        [HttpGet]
+
+        
+        [HttpPost]
         [Route("api/BestPlaceToFishDuringMonth")]
         public IActionResult BestPlaceToFishDuringMonth(string[] listOfSystems, int month, int rows = 10)
         {

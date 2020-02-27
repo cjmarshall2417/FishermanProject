@@ -79,14 +79,19 @@ export default {
         },
         {
           icon: 'mdi-chart-bubble',
-          title: 'Inspire',
-          to: '/inspire'
+          title: 'Best Month',
+          to: '/bestmonth'
+        },
+        {
+          icon: 'mdi-chart-bubble',
+          title: 'Best Place',
+          to: '/bestplace'
         }
       ],
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      title: 'Vuetify.js'
+      title: 'Fishermen'
     }
   }
 }

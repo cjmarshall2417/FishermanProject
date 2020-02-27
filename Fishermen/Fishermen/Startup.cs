@@ -28,7 +28,7 @@ namespace Fishermen
                 options.AddPolicy(MyAllowSpecificOrigins,
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000");
+                        builder.WithOrigins("http://localhost:3000").AllowAnyHeader();
                     });
             });
             string secretUri = "https://phishermen.vault.azure.net/secrets/Phishing/7f85a155194d43cc80dea03cf1df6cf4";

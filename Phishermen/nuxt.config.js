@@ -30,7 +30,7 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [],
+  plugins: ['~/plugins/vue-apexcharts.client'],
   /*
    ** Nuxt.js dev-modules
    */
