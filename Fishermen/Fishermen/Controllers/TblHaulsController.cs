@@ -63,11 +63,11 @@ namespace Fishermen.Controllers
                             join system in systems on location.SystemId equals system.SystemId
                             where listOfSystems.Contains(system.SystemName) && haul.Month == month
                             group haul by new { AreaNumber = location.AreaNumber, AreaName = location.AreaName } into haulGroup
-                            orderby haulGroup.Sum(h => h.Caught) descending
+                            orderby haulGroup.Sum(h => h.Caught) / haulGroup.Count() descending
                             select new {
                                 AreaNumber = haulGroup.Key.AreaNumber,
                                 AreaName = haulGroup.Key.AreaName,
-                                Sum = haulGroup.Sum(h => h.Caught)
+                                AverageHaul = haulGroup.Sum(h => h.Caught) / haulGroup.Count()
                             }).Take(rows);
 
             return Json(topAreas);
