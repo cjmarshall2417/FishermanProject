@@ -2,37 +2,27 @@
   <div>
     <v-card color="red lighten-2" dark>
       <v-card-title class="headline red lighten-3">
-        Fishermen
+        Best Month to fish in an area
       </v-card-title>
       <v-card-text>
-        Explore places to fish
+        Search an area to find out the best month to fish
       </v-card-text>
       <v-card-text>
         <SearchBox
           :model="area"
           label="Area"
           url="GetAreas"
+          item-value="areaNumber"
+          item-text="areaName"
           :is-obj="true"
           placeholder="Search Area"
           @area="getArea"
         />
-        <!--        <SearchBox-->
-        <!--          :model="system"-->
-        <!--          label="System"-->
-        <!--          url="GetSystems"-->
-        <!--          placeholder="Search System"-->
-        <!--          @system="getSystem"-->
-        <!--        />-->
       </v-card-text>
       <v-card-actions>
         <v-btn @click="submit">
           Submit
         </v-btn>
-        <!--      <v-spacer></v-spacer>-->
-        <!--      <v-btn :disabled="!model" color="grey darken-3" @click="model = null">-->
-        <!--        Clear-->
-        <!--        <v-icon right>mdi-close-circle</v-icon>-->
-        <!--      </v-btn>-->
       </v-card-actions>
     </v-card>
     <ColumnChart v-if="isSubmit" :data="data" :xaxis="xaxis" />
@@ -64,7 +54,6 @@ export default {
       this.$axios
         .$get(`BestMonthInArea?areaNumber=${this.area.areaNumber}`)
         .then((res) => {
-          console.log(res)
           for (let i = 0; i < res.length; i++) {
             this.data.push(res[i].fishCaught)
             this.xaxis.push(res[i].month)
@@ -73,8 +62,6 @@ export default {
         .then(() => {
           this.isSubmit = true
         })
-      // console.log(this.area.areaNumber)
-      // console.log(this.system)
     }
   }
 }
