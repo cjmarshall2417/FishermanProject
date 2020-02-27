@@ -11,7 +11,7 @@
 
 <script>
 export default {
-  name: 'MulColumnChart',
+  name: 'StackColumnChart',
   props: {
     data: {
       default() {
@@ -20,31 +20,27 @@ export default {
       type: Array
     }
   },
-  computed: {
-    series() {
-      return this.data
-    },
-    chartOptions() {
-      return {
+  data() {
+    return {
+      chartOptions: {
         chart: {
           type: 'bar',
-          height: 350
+          height: 350,
+          stacked: true,
+          stackType: '100%'
         },
-        plotOptions: {
-          bar: {
-            horizontal: false,
-            columnWidth: '55%',
-            endingShape: 'rounded'
+        responsive: [
+          {
+            breakpoint: 480,
+            options: {
+              legend: {
+                position: 'bottom',
+                offsetX: -10,
+                offsetY: 0
+              }
+            }
           }
-        },
-        dataLabels: {
-          enabled: false
-        },
-        stroke: {
-          show: true,
-          width: 2,
-          colors: ['transparent']
-        },
+        ],
         xaxis: {
           categories: [
             'Jan',
@@ -61,13 +57,13 @@ export default {
             'Dec'
           ]
         },
-        yaxis: {
-          title: {
-            text: 'Number of fish'
-          }
-        },
         fill: {
           opacity: 1
+        },
+        legend: {
+          position: 'right',
+          offsetX: 0,
+          offsetY: 50
         },
         tooltip: {
           y: {
@@ -77,6 +73,11 @@ export default {
           }
         }
       }
+    }
+  },
+  computed: {
+    series() {
+      return this.data
     }
   }
 }

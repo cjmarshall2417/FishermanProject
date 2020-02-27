@@ -14,7 +14,7 @@
           url="GetAreas"
           item-value="areaNumber"
           item-text="areaName"
-          :is-obj="true"
+          :is-multiple="true"
           placeholder="Search Area"
           @area="getArea"
         />
@@ -25,15 +25,20 @@
         </v-btn>
       </v-card-actions>
     </v-card>
-    <ColumnChart v-if="isSubmit" :data="data" :xaxis="xaxis" />
+    <!--    <ColumnChart v-if="isSubmit" :data="data" :xaxis="xaxis" />-->
+    <MulColumnChart v-if="isSubmit" :data="data" />
+    <StackColumnChart v-if="isSubmit" :data="data" />
+    <MulRadarChart v-if="isSubmit" :data="data" />
   </div>
 </template>
 
 <script>
 import SearchBox from '../components/SearchBox'
-import ColumnChart from '../components/ColumnChart'
+import MulColumnChart from '../components/MulColumnChart'
+import StackColumnChart from '../components/StackColumnChart'
+import MulRadarChart from '../components/MulRadarChart'
 export default {
-  components: { ColumnChart, SearchBox },
+  components: { MulRadarChart, StackColumnChart, MulColumnChart, SearchBox },
   data: () => ({
     area: null,
     system: null,
@@ -48,20 +53,36 @@ export default {
     getSystem(system) {
       this.system = system
     },
-    submit() {
+    async submit() {
+      this.isSubmit = false
       this.data = []
-      this.xaxis = []
-      this.$axios
-        .$get(`BestMonthInArea?areaNumber=${this.area.areaNumber}`)
-        .then((res) => {
-          for (let i = 0; i < res.length; i++) {
-            this.data.push(res[i].fishCaught)
-            this.xaxis.push(res[i].month)
-          }
-        })
-        .then(() => {
-          this.isSubmit = true
-        })
+      // this.xaxis = []
+      // console.log(this.area)
+      for (let i = 0; i < this.area.length; i++) {
+        const r = await this.$axios.$get(
+          `BestMonthInArea?areaNumber=${this.area[i].areaNumber}`
+        )
+        this.data[i] = {
+          name: this.area[i].areaName,
+          data: []
+        }
+        for (let j = 0; j < r.length; j++) {
+          this.data[i].data.push(r[j].fishCaught)
+        }
+      }
+      this.isSubmit = true
+      console.log(this.data)
+      // this.$axios
+      //   .$get(`BestMonthInArea?areaNumber=${this.area.areaNumber}`)
+      //   .then((res) => {
+      //     for (let i = 0; i < res.length; i++) {
+      //       this.data.push(res[i].fishCaught)
+      //       this.xaxis.push(res[i].month)
+      //     }
+      //   })
+      //   .then(() => {
+      //     this.isSubmit = true
+      //   })
     }
   }
 }
