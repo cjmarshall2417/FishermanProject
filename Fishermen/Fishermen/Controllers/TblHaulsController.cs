@@ -87,7 +87,7 @@ namespace Fishermen.Controllers
                              group haul by haul.Month into haulGroup
                              select new { Month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(haulGroup.Key)//converts a month number to a month name
                              , MonthNumber = haulGroup.Key
-                             ,FishCaught = haulGroup.Sum(h => h.Caught) });
+                             ,FishCaught = haulGroup.Sum(h => h.Caught) / haulGroup.Count() });
 
             var bestMonthList = bestMonth.ToList();
             if(bestMonthList.Count() != 12)
@@ -277,14 +277,14 @@ namespace Fishermen.Controllers
                 allData = allData.Where(h => h.FishCaught < haulLessThan);
             }
             //checks for groupBys and applies them if necessary
-            //lots of code needs to be duplicated because the grouped by data will be in slightly different
+            //lots of code needs to be duplicated because the grouped by data will be in slightly different formats
             //based on where we grouped by. This prevents me from defining the groupedData variable outside of the inner if statements
             if(groupBy != "None")
             {
-                if(groupBy == "Date")
+                if (groupBy == "Date")
                 {
                     var groupedData = allData.GroupBy(h => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(h.Month) + " " + h.Year.ToString());
-                    groupedData.OrderBy(g => g.Key);
+                    groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
                         //I'm using vague property names here to make this data easier to work with on the front end
@@ -302,7 +302,7 @@ namespace Fishermen.Controllers
                 else if (groupBy == "Month")
                 {
                     var groupedData = allData.GroupBy(h => h.Month);
-                    groupedData.OrderBy(g => g.Key);
+                    groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
                         var result = groupedData.Select(g => new {GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
@@ -334,7 +334,7 @@ namespace Fishermen.Controllers
                 else if (groupBy == "Area")
                 {
                     var groupedData = allData.GroupBy(h => h.AreaNumber);
-                    groupedData.OrderBy(g => g.Key);
+                    groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
@@ -349,7 +349,7 @@ namespace Fishermen.Controllers
                 else if (groupBy == "Region")
                 {
                     var groupedData = allData.GroupBy(h => h.Region);
-                    groupedData.OrderBy(g => g.Key);
+                    groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
@@ -364,7 +364,7 @@ namespace Fishermen.Controllers
                 else if (groupBy == "System")
                 {
                     var groupedData = allData.GroupBy(h => h.System);
-                    groupedData.OrderBy(g => g.Key);
+                    groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });

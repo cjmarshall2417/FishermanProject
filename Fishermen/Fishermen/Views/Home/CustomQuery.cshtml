@@ -16,11 +16,12 @@
 <body>
     <h1>CustomQuery</h1>
     <div id="app">
-        <p>{{url}}</p>
-        <input style="width: 1000px" v-model="url" type="text" value="https://localhost:5001/api/CustomQuery?" />
+        <span>Query Name: </span><input style="width: 700px" v-model="queryName" type="text" />
+        <button v-on:click="saveQuery()">Save Query</button>
+        <input style="width: 1000px" v-model="url" type="text" />
         <button v-on:click="fillTable()">Refresh Table</button><button v-on:click="resetURL()">Reset</button><br />
         <select v-model="selectedYear">
-            <option disabled value="">Select a year</option>
+            <option selected disabled value="">Select a year</option>
             <option v-for="year in validYears">{{year}}</option>
         </select>
         <button v-on:click="addFilter('years', selectedYear)">Add Year Filter</button>
@@ -54,7 +55,19 @@
         <span>Haul greater than:</span> <input type="text" v-model="haulGreaterThan" />
         <span>Haul less than:</span> <input type="text" v-model="haulLessThan" />
         <span>Rows to return:</span> <input type="text" v-model="rows" />
+        <br />
+        <span>Group by:</span>
+        <select v-model="selectedGroupBy">
+            <option v-for="groupBy in validGroupBys">{{groupBy}}</option>
+        </select>
 
+        <span>Aggregate:</span> 
+        <select v-model="selectedAggregate">
+            <option>Average</option>
+            <option>Sum</option>
+        </select>
+
+        <div v-if="selectedGroupBy == 'None'">
         <table>
             <tr>
                 <th>Year</th>
@@ -75,6 +88,20 @@
                 <td>{{haul["region"]}}</td>
             </tr>
         </table>
+        </div>
+        <div v-else>
+            <table>
+                <tr>
+                    <th>Group Key</th>
+                    <th>Fish Caught</th>
+                </tr>
+                <tr v-for="haul in customQueryResults">
+                    <td>{{haul["groupKey"]}}</td>
+                    <td>{{haul["fishCaught"]}}</td>
+                </tr>
+            </table>
+
+        </div>
 
     </div>
 </body>
@@ -87,9 +114,11 @@
         el: "#app",
         data: {
             customQueryResults: [],
-            baseURL:  "../api/CustomQuery?",
+
+            baseURL: "../api/CustomQuery?",
             url: "../api/CustomQuery?",
             months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+
             validYears: [],
             validYearsURL: "../api/GetYears",
             validMonths: [],
@@ -100,20 +129,24 @@
             validRegionsURL: "../api/GetRegions",
             validSystems: [],
             validSystemsURL: "../api/GetSystems",
+            validGroupBys: ["None", "Date", "Year", "Month", "Area", "System", "Region"],
+
+            queryName: "",
             selectedRegion: null,
             selectedArea: null,
-            selectedMonth: null,
+            selectedMonth: "Select A Month",
             selectedYear: null,
             selectedSystem: null,
+            selectedAggregate: "Average",
+            selectedGroupBy: "None",
             haulGreaterThan: 0,
             haulLessThan: 10000,
             rows: 1000
         },
         methods: {
             fillTable: function () {
-                var url = this.url + "haulGreaterThan=" + this.haulGreaterThan + "&";
-                url += "haulLessThan=" + this.haulLessThan + "&";
-                url += "rows=" + this.rows + "&";
+                
+                var url = this.buildCompleteURL();
                 this.$http.get(url)
                     .then(value => { return value.json(); })
                     .then(jsonValue => {
@@ -171,15 +204,37 @@
                 this.fillTable();
 
                 //code taken from https://stackoverflow.com/questions/9539723/javascript-to-select-first-option-of-select-list
-                selectTags = document.getElementsByTagName("select");
+                selectTags = document.body.getElementsByTagName("select");
 
-                for(var i = 0; i < selectTags.length; i++) {
-                  selectTags[i].selectedIndex = 0;
+                for (var i = 0; i < selectTags.length; i++) {
+                  
+                  selectTags[i].selectedIndex = "0";
                 }  
+            },
+
+            saveQuery: function () {
+                url = this.buildCompleteURL;
             },
 
             resetURL: function () {
                 this.url = this.baseURL;
+            },
+
+            buildCompleteURL: function () {
+                //buttons to add filters that can have multiple values are fine but some
+                //values should only appear once so this code adds all the values you can only have once to the url
+                var url = this.url + "haulGreaterThan=" + this.haulGreaterThan + "&";
+                url += "haulLessThan=" + this.haulLessThan + "&";
+                url += "rows=" + this.rows + "&";
+                url += "groupBy=" + this.selectedGroupBy + "&";
+                if (this.selectedAggregate == "Average") {
+                    url += "average=true&";
+                }
+                else {
+                    url += "average=false&";
+                }
+
+                return url;
             }
         },
             mounted() {
