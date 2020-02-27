@@ -130,6 +130,7 @@
             validSystems: [],
             validSystemsURL: "../api/GetSystems",
             validGroupBys: ["None", "Date", "Year", "Month", "Area", "System", "Region"],
+            saveQueryURL: "../api/SaveQuery?queryURL=",
 
             queryName: "",
             selectedRegion: null,
@@ -213,8 +214,14 @@
             },
 
             saveQuery: function () {
-                var url = this.buildCompleteURL;
+                var url = this.buildCompleteURL();
                 var queryName = this.queryName;
+                var saveQueryURL = this.saveQueryURL;
+                var finalURL = saveQueryURL + encodeURIComponent(url) + "&queryName=" + queryName;
+                alert(finalURL);
+                this.$http.post(finalURL).then(value => { return value.json(); });
+
+                
 
 
 
