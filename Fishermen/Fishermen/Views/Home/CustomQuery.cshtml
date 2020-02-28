@@ -23,7 +23,7 @@
             <option v-for="query in userQueries" v-bind:value="query['queryUrl']">{{query['queryName']}}</option>
         </select>
 
-        <p>{{completeURL}}</p>
+        <input style="width: 1000px" v-model="completeURL" type="text" />
         <button v-on:click="fillTable()">Refresh Table</button><button v-on:click="resetURL()">Reset</button><br />
         <select v-model="selectedYear">
             <option selected disabled value="">Select a year</option>
@@ -57,9 +57,9 @@
         <button v-on:click="addFilter('systems', selectedSystem)">Add System Filter</button>
         <br />
 
-        <span>Haul greater than:</span> <input type="text" v-model="haulGreaterThan" v-on:blur="fillTable()" />
-        <span>Haul less than:</span> <input type="text" v-model="haulLessThan" v-on:blur="fillTable()"/>
-        <span>Rows to return:</span> <input type="text" v-model="rows" v-on:blur="fillTable()" />
+        <span>Haul greater than:</span> <input type="text" v-model="haulGreaterThan" />
+        <span>Haul less than:</span> <input type="text" v-model="haulLessThan" />
+        <span>Rows to return:</span> <input type="text" v-model="rows" />
         <br />
         <span>Group by:</span>
         <select v-model="selectedGroupBy" v-on:change="fillTable()">
@@ -67,7 +67,7 @@
         </select>
 
         <span>Aggregate:</span> 
-        <select v-model="selectedAggregate" v-on:change="fillTable()">
+        <select v-model="selectedAggregate">
             <option>Average</option>
             <option>Sum</option>
         </select>

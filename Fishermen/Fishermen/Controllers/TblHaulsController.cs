@@ -177,7 +177,7 @@ namespace Fishermen.Controllers
             return Json(validYears);
         }
 
-        [HttpGet]
+        [HttpGe
         [Route("api/GetUserQueries")]
         public IActionResult GetUserQueries()
         {
