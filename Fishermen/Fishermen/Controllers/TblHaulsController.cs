@@ -177,6 +177,13 @@ namespace Fishermen.Controllers
             return Json(validYears);
         }
 
+        [HttpGe
+        [Route("api/GetUserQueries")]
+        public IActionResult GetUserQueries()
+        {
+            return Json(fishHauls.TblQueries);
+        }
+
         [HttpGet]
         [Route("api/GetMonths")]
         public IActionResult GetMonths()
@@ -283,7 +290,9 @@ namespace Fishermen.Controllers
             {
                 if (groupBy == "Date")
                 {
-                    var groupedData = allData.GroupBy(h => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(h.Month) + " " + h.Year.ToString());
+                    
+                    var formattedData = allData.Select(h => new { Date = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(h.Month) + " " + h.Year.ToString(), FishCaught = h.FishCaught });
+                    var groupedData = formattedData.GroupBy(h => h.Date);
                     groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {

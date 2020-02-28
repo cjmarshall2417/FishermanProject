@@ -18,7 +18,12 @@
     <div id="app">
         <span>Query Name: </span><input style="width: 700px" v-model="queryName" type="text" />
         <button v-on:click="saveQuery()">Save Query</button>
-        <input style="width: 1000px" v-model="url" type="text" />
+        <select v-model="selectedUserQuery" v-on:change="fillTable(selectedUserQuery)">
+            <option selected disabled>Select a user made query</option>
+            <option v-for="query in userQueries" v-bind:value="query['queryUrl']">{{query['queryName']}}</option>
+        </select>
+
+        <input style="width: 1000px" v-model="completeURL" type="text" />
         <button v-on:click="fillTable()">Refresh Table</button><button v-on:click="resetURL()">Reset</button><br />
         <select v-model="selectedYear">
             <option selected disabled value="">Select a year</option>
@@ -57,7 +62,7 @@
         <span>Rows to return:</span> <input type="text" v-model="rows" />
         <br />
         <span>Group by:</span>
-        <select v-model="selectedGroupBy">
+        <select v-model="selectedGroupBy" v-on:change="fillTable()">
             <option v-for="groupBy in validGroupBys">{{groupBy}}</option>
         </select>
 
@@ -67,7 +72,7 @@
             <option>Sum</option>
         </select>
 
-        <div v-if="selectedGroupBy == 'None'">
+        <div v-if="!groupedDisplay">
         <table>
             <tr>
                 <th>Year</th>
@@ -131,7 +136,10 @@
             validSystemsURL: "../api/GetSystems",
             validGroupBys: ["None", "Date", "Year", "Month", "Area", "System", "Region"],
             saveQueryURL: "../api/SaveQuery?queryURL=",
-
+            getUserQueriesURL: "../api/GetUserQueries",
+            userQueries: [],
+            
+            groupedDisplay: false,
             queryName: "",
             selectedRegion: null,
             selectedArea: null,
@@ -140,14 +148,46 @@
             selectedSystem: null,
             selectedAggregate: "Average",
             selectedGroupBy: "None",
+            selectedUserQuery: null,
             haulGreaterThan: 0,
             haulLessThan: 10000,
             rows: 1000
         },
+
+        computed: {
+            completeURL: function () {
+                //buttons to add filters that can have multiple values are fine but some
+                //values should only appear once so this code adds all the values you can only have once to the url
+                var url = this.url + "haulGreaterThan=" + this.haulGreaterThan + "&";
+                url += "haulLessThan=" + this.haulLessThan + "&";
+                url += "rows=" + this.rows + "&";
+                url += "groupBy=" + this.selectedGroupBy + "&";
+                if (this.selectedAggregate == "Average") {
+                    url += "average=true&";
+                }
+                else {
+                    url += "average=false&";
+                }
+
+                return url;
+            }
+
+    },
         methods: {
-            fillTable: function () {
+            fillTable: function (url = "") {
+                if (url == "") {
+                    url = this.completeURL;
+                }
+
+                if (url.includes("groupBy=None")) {
+                    this.groupedDisplay = false;
+                }
+                else
+                {
+                    this.groupedDisplay = true;
+                }
+
                 
-                var url = this.buildCompleteURL();
                 this.$http.get(url)
                     .then(value => { return value.json(); })
                     .then(jsonValue => {
@@ -158,6 +198,7 @@
                         this.customQueryResults = jsonResults;
                     })
             },
+
             //I hate having all these different functions but I don't know how to do something like a C# out keyword in javascript.
             getYears: function() {
                 this.$http.get(this.validYearsURL)
@@ -200,6 +241,14 @@
                     })
             },
 
+             getUserQueries: function () {
+                this.$http.get(this.getUserQueriesURL)
+                    .then(value => { return value.json(); })
+                    .then(jsonValue => {
+                        this.userQueries = jsonValue;
+                    })
+            },
+
             addFilter: function(filterType, value) {
                 this.url += filterType + "=" + value + "&";
                 this.fillTable();
@@ -214,16 +263,12 @@
             },
 
             saveQuery: function () {
-                var url = this.buildCompleteURL();
+                var url = this.completeURL;
                 var queryName = this.queryName;
                 var saveQueryURL = this.saveQueryURL;
                 var finalURL = saveQueryURL + encodeURIComponent(url) + "&queryName=" + queryName;
                 alert(finalURL);
                 this.$http.post(finalURL).then(value => { return value.json(); });
-
-                
-
-
 
             },
 
@@ -255,6 +300,7 @@
                 this.getAreas();
                 this.getRegions();
                 this.getSystems();
+                this.getUserQueries();
             }
 
     })
