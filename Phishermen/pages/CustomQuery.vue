@@ -1,68 +1,57 @@
 ﻿
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
-</head>
-<body>
-    <h1>CustomQuery</h1>
-    <div id="app">
+<template>
+    <div>
         <span>Query Name: </span><input style="width: 700px" v-model="queryName" type="text" />
-        <button v-on:click="saveQuery()">Save Query</button>
+        <v-btn v-on:click="saveQuery()">Save Query</v-btn>
         <select v-model="selectedUserQuery" v-on:change="fillTable(selectedUserQuery)">
             <option selected disabled>Select a user made query</option>
             <option v-for="query in userQueries" v-bind:value="query['queryUrl']">{{query['queryName']}}</option>
         </select>
 
         <p>{{completeURL}}</p>
-        <button v-on:click="fillTable()">Refresh Table</button><button v-on:click="resetURL()">Reset</button><br />
-        <select v-model="selectedYear">
-            <option selected disabled value="">Select a year</option>
-            <option v-for="year in validYears">{{year}}</option>
-        </select>
-        <button v-on:click="addFilter('years', selectedYear)">Add Year Filter</button>
+        <v-btn v-on:click="fillTable()">Refresh Table</v-btn><v-btn v-on:click="resetURL()">Reset</v-btn><br />
+        <v-row>
+            <v-col>
+        <v-select v-model="selectedYear" :items="validYears" label="Select a Year"></v-select>
+        
+        <v-btn v-on:click="addFilter('years', selectedYear)">Add Year Filter</v-btn>
+        </v-col>
+        <v-col>
+        <v-select v-model="selectedMonth" :items="validMonths" item-text="monthName" item-value="monthNumber" label="Select a Month"></v-select>
+        <v-btn v-on:click="addFilter('months', selectedMonth)">Add Month Filter</v-btn>
+        </v-col>
+        <v-col>
+        <v-select v-model="selectedArea" :items="validAreas" :item-text="item => item.areaNumber +': '+ item.areaName" item-value="areaNumber" label = "Select an Area"></v-select>
+        <v-btn v-on:click="addFilter('areaNumbers', selectedArea)">Add Area Filter</v-btn>
+        </v-col>
+        </v-row>
 
-        <select v-model="selectedMonth">
-            <option disabled value="">Select a month</option>
-            <option v-for="month in validMonths" v-bind:value="month['monthNumber']">{{month['monthName']}}</option>
-        </select>
-        <button v-on:click="addFilter('months', selectedMonth)">Add Month Filter</button>
+        <v-row>
+        <v-col>
+        <v-select  v-model="selectedRegion" :items="validRegions" label = "Select a Region"></v-select>
+        <v-btn v-on:click="addFilter('regions', selectedRegion)">Add Region Filter</v-btn>
+        </v-col>
+        
+        <v-col>
+        <v-select v-model="selectedSystem" :items="validSystems" label = "Select a System"></v-select>
+        <v-btn v-on:click="addFilter('systems', selectedSystem)">Add System Filter</v-btn>
+        </v-col>
 
-        <select v-model="selectedArea">
-            <option disabled value="">Select an area</option>
-            <option v-for="area in validAreas" v-bind:value="area['areaNumber']">{{area["areaNumber"]}} {{area["areaName"]}}</option>
-        </select>
-        <button v-on:click="addFilter('areaNumbers', selectedArea)">Add Area Filter</button>
-        <br />
+        <v-col>
+        <v-select v-model="selectedGroupBy" :items="validGroupBys" v-on:change="fillTable()" label = "Choose a Group By"></v-select>
+        </v-col>
 
-        <select v-model="selectedRegion">
-            <option disabled value="">Select a region</option>
-            <option v-for="region in validRegions">{{region}}</option>
-        </select>
-        <button v-on:click="addFilter('regions', selectedRegion)">Add Region Filter</button>
-
-        <select v-model="selectedSystem">
-            <option disabled value="">Select a system</option>
-            <option v-for="system in validSystems">{{system}}</option>
-        </select>
-        <button v-on:click="addFilter('systems', selectedSystem)">Add System Filter</button>
-        <br />
-
+        <v-col>
+        <v-select  v-model="selectedAggregate" :items="validAggregates" v-on:change="fillTable()" label = "Choose an Aggregate"></v-select>    
+        </v-col>
+        
+        </v-row>
         <span>Haul greater than:</span> <input type="text" v-model="haulGreaterThan" v-on:blur="fillTable()" />
         <span>Haul less than:</span> <input type="text" v-model="haulLessThan" v-on:blur="fillTable()"/>
         <span>Rows to return:</span> <input type="text" v-model="rows" v-on:blur="fillTable()" />
         <br />
-        <span>Group by:</span>
-        <select v-model="selectedGroupBy" v-on:change="fillTable()">
-            <option v-for="groupBy in validGroupBys">{{groupBy}}</option>
-        </select>
-
-        <span>Aggregate:</span> 
-        <select v-model="selectedAggregate" v-on:change="fillTable()">
-            <option>Average</option>
-            <option>Sum</option>
-        </select>
+        
+      
 
         <div v-if="!groupedDisplay">
         <table>
@@ -101,15 +90,15 @@
         </div>
 
     </div>
-</body>
-</html>
+</template>
 
 <script>
 
 
-    let vue = new Vue({
-        el: "#app",
-        data: {
+    export default {
+        
+        data: function() {
+            return {
             customQueryResults: [],
 
             baseURL: "../api/CustomQuery?",
@@ -117,9 +106,9 @@
             months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
 
             validYears: [],
-            validYearsURL: "../api/GetYears",
+            validYearsURL: "GetYears",
             validMonths: [],
-            validMonthsURL: "../api/GetMonths",
+            validMonthsURL: "GetMonths",
             validAreas: [],
             validAreasURL: "../api/GetAreas",
             validRegions: [],
@@ -127,6 +116,7 @@
             validSystems: [],
             validSystemsURL: "../api/GetSystems",
             validGroupBys: ["None", "Date", "Year", "Month", "Area", "System", "Region"],
+            validAggregates:["Sum", "Average"],
             saveQueryURL: "../api/SaveQuery?queryURL=",
             getUserQueriesURL: "../api/GetUserQueries",
             userQueries: [],
@@ -144,11 +134,12 @@
             haulGreaterThan: 0,
             haulLessThan: 10000,
             rows: 1000
+            }
         },
 
         computed: {
             completeURL: function () {
-                //buttons to add filters that can have multiple values are fine but some
+                //v-btns to add filters that can have multiple values are fine but some
                 //values should only appear once so this code adds all the values you can only have once to the url
                 var url = this.url + "haulGreaterThan=" + this.haulGreaterThan + "&";
                 url += "haulLessThan=" + this.haulLessThan + "&";
@@ -166,7 +157,7 @@
 
     },
         methods: {
-            fillTable: function (url = "") {
+            fillTable(url = ""){
                 if (url == "") {
                     url = this.completeURL;
                 }
@@ -180,73 +171,60 @@
                 }
 
                 
-                this.$http.get(url)
-                    .then(value => { return value.json(); })
-                    .then(jsonValue => {
-                        var jsonResults = [];
-                        for (let key in jsonValue) {
-                            jsonResults.push(jsonValue[key]);
-                        }
-                        this.customQueryResults = jsonResults;
-                    })
+                this.$axios.$get(url)
+                    .then(value => { this.customQueryResults = value })
+                    
             },
 
             //I hate having all these different functions but I don't know how to do something like a C# out keyword in javascript.
-            getYears: function() {
-                this.$http.get(this.validYearsURL)
-                    .then(value => { return value.json(); })
-                    .then(jsonValue => {
-                        this.validYears = jsonValue;
-                    })
+            getYears() {
+                this.$axios.$get(this.validYearsURL)
+                    .then(value => { this.validYears = value;})
+                    
             },
 
-            getMonths: function() {
-                this.$http.get(this.validMonthsURL)
-                    .then(value => { return value.json(); })
-                    .then(jsonValue => {
-                        this.validMonths = jsonValue;
-                    })
+            getMonths() {
+                this.$axios.$get(this.validMonthsURL)
+                    .then(value => { this.validMonths = value; })
+                        
+                        
+        
+                    
+            },
+                    
+       
+
+            getAreas() {
+                this.$axios.$get(this.validAreasURL)
+                    .then(value => { this.validAreas = value; })
+                    
+
             },
 
-            getAreas: function () {
-                this.$http.get(this.validAreasURL)
-                    .then(value => { return value.json(); })
-                    .then(jsonValue => {
-                        this.validAreas = jsonValue;
-                    })
-
+            getRegions() {
+                this.$axios.$get(this.validRegionsURL)
+                    .then(value => { this.validRegions = value; })
+                    
             },
 
-            getRegions: function () {
-                this.$http.get(this.validRegionsURL)
-                    .then(value => { return value.json(); })
-                    .then(jsonValue => {
-                        this.validRegions = jsonValue;
-                    })
+            getSystems() {
+                this.$axios.$get(this.validSystemsURL)
+                    .then(value => { this.validSystems = value;})
+                    
             },
 
-            getSystems: function () {
-                this.$http.get(this.validSystemsURL)
-                    .then(value => { return value.json(); })
-                    .then(jsonValue => {
-                        this.validSystems = jsonValue;
-                    })
+             getUserQueries() {
+                this.$axios.$get(this.getUserQueriesURL)
+                    .then(value => { this.userQueries = value;})
+                    
             },
 
-             getUserQueries: function () {
-                this.$http.get(this.getUserQueriesURL)
-                    .then(value => { return value.json(); })
-                    .then(jsonValue => {
-                        this.userQueries = jsonValue;
-                    })
-            },
-
-            addFilter: function(filterType, value) {
+            addFilter(filterType, value) {
                 this.url += filterType + "=" + value + "&";
                 this.fillTable();
 
                 //code taken from https://stackoverflow.com/questions/9539723/javascript-to-select-first-option-of-select-list
-                selectTags = document.body.getElementsByTagName("select");
+                var selectTags = document.body.getElementsByTagName("select");
 
                 for (var i = 0; i < selectTags.length; i++) {
                   
@@ -254,22 +232,22 @@
                 }  
             },
 
-            saveQuery: function () {
+            saveQuery() {
                 var url = this.completeURL;
                 var queryName = this.queryName;
                 var saveQueryURL = this.saveQueryURL;
                 var finalURL = saveQueryURL + encodeURIComponent(url) + "&queryName=" + queryName;
                 alert(finalURL);
-                this.$http.post(finalURL).then(value => { return value.json(); });
+                this.$axios.post(finalURL).then(value => { console.log(value) });
 
             },
 
-            resetURL: function () {
+            resetURL() {
                 this.url = this.baseURL;
             },
 
-            buildCompleteURL: function () {
-                //buttons to add filters that can have multiple values are fine but some
+            buildCompleteURL() {
+                //v-btns to add filters that can have multiple values are fine but some
                 //values should only appear once so this code adds all the values you can only have once to the url
                 var url = this.url + "haulGreaterThan=" + this.haulGreaterThan + "&";
                 url += "haulLessThan=" + this.haulLessThan + "&";
@@ -295,6 +273,12 @@
                 this.getUserQueries();
             }
 
-    })
+    };
 </script>
 
+<style>
+.v-select {
+    width:250px;
+   
+}
+</style>

@@ -34,7 +34,7 @@ namespace Fishermen
             string secretUri = "https://phishermen.vault.azure.net/secrets/Phishing/7f85a155194d43cc80dea03cf1df6cf4";
             var kv = new KeyVaultClient(Utils.Utils.GetAccessToken);
             var sec = kv.GetSecretAsync(secretUri).Result;
-            services.AddControllersWithViews();
+            services.AddControllersWithViews(options => options.MaxIAsyncEnumerableBufferLimit = 5000);
             services.AddDbContext<phishermenContext>(options => options.UseSqlServer(sec.Value));
         }
 
