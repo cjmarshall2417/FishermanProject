@@ -35,6 +35,7 @@
     </v-row>
     <br>
     <v-carousel
+      cycle
       interval="5000"
       show-arrows-on-hover
     >
@@ -55,8 +56,13 @@
         <div class="content-container">
           <div class="modal">
             <div style="text-shadow: 0 3px black;position: relative;z-index: 1;background-size: 30px 30px ; color:white; position: relative;top: 30%; width: 100%; padding-left: 10px; padding-right:10px; text-align: center;">
-              <h2>
+              <h2 v-if="locationss[i] !== ''">
+                <a :href="locationss[i]">
                 {{ messages[i] }}
+                </a>
+              </h2>
+              <h2 v-else :href="locationss[i]">
+                  {{ messages[i] }}
               </h2>
             </div>
           </div>
@@ -102,6 +108,28 @@ export default {
       // {
       //   src: "~/assets/Fleet.jpg"
       // }
+    ],
+    locationss: [
+
+      '/bestplace',
+      '/bestmonth',
+      '',
+      ''
+    ],
+    locations: [
+
+      {
+        href: '/bestmonth'
+      },
+      {
+        href: '/bestplace'
+      },
+      {
+        href: ''
+      },
+      {
+        href: ''
+      }
     ],
     messages: [
       'Fish for the Best Location!',
