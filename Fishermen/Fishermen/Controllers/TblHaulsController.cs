@@ -10,13 +10,14 @@ using MoreLinq;
 using System.Text.Json;
 using System.Web;
 using Microsoft.Extensions.Configuration;
+using System.Linq.Dynamic.Core;
 
 
 namespace Fishermen.Controllers
 {
     public class TblHaulsController : Controller
     {
-        public string[] months = new string[] { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+        public string[] validMonths = new string[] { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
         private readonly phishermenContext fishHauls;
 
         public TblHaulsController(phishermenContext context)
@@ -92,11 +93,11 @@ namespace Fishermen.Controllers
             var bestMonthList = bestMonth.ToList();
             if (bestMonthList.Count() != 12)
             {
-                for (int i = 0; i < months.Count(); i++)
+                for (int i = 0; i < validMonths.Count(); i++)
                 {
-                    if (bestMonthList.FindIndex(m => m.Month == months[i]) == -1)
+                    if (bestMonthList.FindIndex(m => m.Month == validMonths[i]) == -1)
                     {
-                        bestMonthList.Add(new { Month = months[i], MonthNumber = i + 1, FishCaught = 0 });
+                        bestMonthList.Add(new { Month = validMonths[i], MonthNumber = i + 1, FishCaught = 0 });
                     }
 
                 }
@@ -104,6 +105,26 @@ namespace Fishermen.Controllers
 
             var result = bestMonthList.OrderBy(m => m.MonthNumber);
             return Json(result);
+        }
+
+        [HttpGet]
+        [Route("api/RegionTopTenAreas")]
+        public IActionResult RegionTopTenArea(string regionName)
+        {
+            var hauls = fishHauls.TblHauls;
+            var locations = fishHauls.TblLocations;
+            var regions = fishHauls.TblRegions;
+
+            var data = from haul in hauls
+                       join location in locations on haul.LocationId equals location.LocationId
+                       join region in regions on location.RegionId equals region.RegionId
+                       where region.RegionName == regionName
+                       group haul by new { AreaNumber = location.AreaNumber, AreaName = location.AreaName } into haulGroup
+                       select new { AreaNumber = haulGroup.Key.AreaNumber, AreaName = haulGroup.Key.AreaName, AverageHaul = haulGroup.Sum(h => h.Caught) / haulGroup.Count() };
+
+            data = data.OrderByDescending(g => g.AverageHaul);
+
+            return Json(data.Take(10));
         }
 
         //returns the total fish caught per year in all areas
@@ -225,7 +246,7 @@ namespace Fishermen.Controllers
         [Route("api/CustomQuery")]
         public IActionResult CustomQuery(int[] years, int[] months,
             int[] areaNumbers, string[] areaNames, string[] regions, string[] systems, string groupBy, bool average = true,
-            int haulGreaterThan = -1, int haulLessThan = -1, int rows = 1000)
+            int haulGreaterThan = -1, int haulLessThan = -1, int rows = 1000, bool sortAscending = true, bool sortByKey = true)
         {
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
@@ -237,7 +258,6 @@ namespace Fishermen.Controllers
                           join location in locations on haul.LocationId equals location.LocationId
                           join system in systemsTbl on location.SystemId equals system.SystemId
                           join region in regionsTbl on location.RegionId equals region.RegionId
-                          orderby haul.Year, haul.Month, location.AreaNumber
                           select new
                           {
                               Region = region.RegionName,
@@ -283,43 +303,138 @@ namespace Fishermen.Controllers
             {
                 allData = allData.Where(h => h.FishCaught < haulLessThan);
             }
-            //checks for groupBys and applies them if necessary
+
             //lots of code needs to be duplicated because the grouped by data will be in slightly different formats
             //based on where we grouped by. This prevents me from defining the groupedData variable outside of the inner if statements
+
+            //I tried cleaning up this code by using reflection to do a single group by statement on the correct property
+            //chosen by a string variable but it didn't work, from my research I don't think you can do that when using a database.
+
+            //Next I tried using a dynamic variable but I can't use lambda expressions in the groups/sorts when using a dynamic type
+            //I think to do this properly I would need to use dynamic linq but I've already wasted a fair amount of time on this so it shall
+            //remain as a nightmare of if/else statements for now.
             if (groupBy != "None")
             {
                 if (groupBy == "Date")
                 {
+
+                    var formattedData = allData.Select(h => new {Date = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(h.Month) + " " + h.Year.ToString(), FishCaught = h.FishCaught });
+                    var groupedData = formattedData.ToList().GroupBy(g => g.Date);//the linq query breaks if I don't use ToList before the group by
+                    //I don't know why.
                     
-                    var formattedData = allData.Select(h => new { Date = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(h.Month) + " " + h.Year.ToString(), FishCaught = h.FishCaught });
-                    var groupedData = formattedData.GroupBy(h => h.Date);
-                    groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
                         //I'm using vague property names here to make this data easier to work with on the front end
                         //If the property names were different in each group by they would have to access the keys by index rather than
                         //by name like has been done in the rest of the queries.
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey.ToString().Split()[1]).ThenBy(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0]));
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey.ToString().Split()[1]).ThenByDescending(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0]));
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                     else
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey.ToString().Split()[1]).ThenBy(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0])); ;
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey.ToString().Split()[1]).ThenByDescending(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0]));
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                 }
                 else if (groupBy == "Month")
                 {
                     var groupedData = allData.GroupBy(h => h.Month);
-                    groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                     else
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                 }
@@ -330,28 +445,114 @@ namespace Fishermen.Controllers
                     if (average)
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
-                        result = result.OrderBy(g => g.GroupKey);
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                     else
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
-                        result = result.OrderBy(g => g.GroupKey);
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                 }
                 else if (groupBy == "Area")
                 {
                     var groupedData = allData.GroupBy(h => h.AreaNumber);
-                    groupedData = groupedData.OrderBy(g => g.Key);
                     if (average)
                     {
+
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                     else
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                 }
@@ -362,11 +563,55 @@ namespace Fishermen.Controllers
                     if (average)
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                     else
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                 }
@@ -377,19 +622,64 @@ namespace Fishermen.Controllers
                     if (average)
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                     else
                     {
                         var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
+                        if (sortAscending)
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderBy(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderBy(g => g.FishCaught);
+                            }
+                        }
+                        else
+                        {
+                            if (sortByKey)
+                            {
+                                result = result.OrderByDescending(g => g.GroupKey);
+                            }
+                            else
+                            {
+                                result = result.OrderByDescending(g => g.FishCaught);
+                            }
+                        }
                         return Json(result);
                     }
                 }
             }
-
             return Json(allData.Take(rows));//now that we've done all the filtering we can apply our row count filter
         }
         
+
+
         [HttpPost]
         [Route("api/SaveQuery")]
         public void SaveQuery(string queryURL, string queryName) {
@@ -407,5 +697,7 @@ namespace Fishermen.Controllers
         {
             return HttpContext.Request.Path.Value + HttpContext.Request.QueryString.Value;
         }
+
+       
     }
 }

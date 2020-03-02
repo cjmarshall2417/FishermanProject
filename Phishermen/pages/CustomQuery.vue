@@ -46,9 +46,28 @@
         </v-col>
         
         </v-row>
+
+        <v-row>
+        <v-col>
         <span>Haul greater than:</span> <input type="text" v-model="haulGreaterThan" v-on:blur="fillTable()" />
+        </v-col>
+
+        <v-col>
         <span>Haul less than:</span> <input type="text" v-model="haulLessThan" v-on:blur="fillTable()"/>
+        </v-col>
+
+        <v-col>
         <span>Rows to return:</span> <input type="text" v-model="rows" v-on:blur="fillTable()" />
+        </v-col>
+
+        <v-col>
+        <v-select v-model="selectedSort" :items="validSorts" v-on:change="fillTable()"></v-select>
+        </v-col>
+
+        <v-col>
+        <v-select v-model="selectedSortBy" :items="validSortBy" v-on:change="fillTable()"></v-select>
+        </v-col>
+        </v-row>
         <br />
         
       
@@ -115,8 +134,10 @@
             validRegionsURL: "../api/GetRegions",
             validSystems: [],
             validSystemsURL: "../api/GetSystems",
-            validGroupBys: ["None", "Date", "Year", "Month", "Area", "System", "Region"],
+            validGroupBys: ["None", "Date", "Year", "Month", "AreaNumber", "System", "Region"],
             validAggregates:["Sum", "Average"],
+            validSorts:["Ascending", "Descending"],
+            validSortBy:["Group Name", "Fish Caught"],
             saveQueryURL: "../api/SaveQuery?queryURL=",
             getUserQueriesURL: "../api/GetUserQueries",
             userQueries: [],
@@ -131,6 +152,8 @@
             selectedAggregate: "Average",
             selectedGroupBy: "None",
             selectedUserQuery: null,
+            selectedSort: "Ascending",
+            selectedSortBy: "Group Name",
             haulGreaterThan: 0,
             haulLessThan: 10000,
             rows: 1000
@@ -145,13 +168,20 @@
                 url += "haulLessThan=" + this.haulLessThan + "&";
                 url += "rows=" + this.rows + "&";
                 url += "groupBy=" + this.selectedGroupBy + "&";
-                if (this.selectedAggregate == "Average") {
-                    url += "average=true&";
-                }
-                else {
+                if (this.selectedAggregate == "Sum") {
                     url += "average=false&";
                 }
 
+                if(this.selectedSort == "Descending")
+                {
+                    url += "sortAscending=false&";
+                }
+
+                if(this.selectedSortBy == "Fish Caught")
+                {
+                    url += "sortByKey=false&";
+                }
+                
                 return url;
             }
 
