@@ -1,3 +1,31 @@
+<style>
+  .modal {
+    margin: auto;
+    background-color: rgba(255, 255, 255, 0.40);
+    border-radius: 5px;
+    color: #333;
+    font-family: sans-serif;
+    line-height: 1.5;
+    margin-top:15%;
+    width:auto;
+    max-width: fit-content;
+    padding: 1rem 2rem;
+    backdrop-filter: blur(1px);
+    background-color: rgba(0, 0, 0, 0.5);
+    a {
+      color: #bf0222;
+    }
+  }
+  .content-container {
+    align-items: center;
+    justify-content: center;
+    position: center;
+    padding-left: 5px;
+    padding-right: 5px;
+    height: 100%;
+    width: auto%;
+  }
+</style>
 <template>
   <div>
     <v-row>
@@ -7,7 +35,6 @@
     </v-row>
     <br>
     <v-carousel
-      cycle
       interval="5000"
       show-arrows-on-hover
     >
@@ -16,10 +43,24 @@
         :key="i"
         reverse-transition="fade-transition"
         :src="item.src"
+        style="align-content: center"
       >
-        <h2 style="color:white; position: absolute;left: 0;top: 30%; width: 100%; padding-left: 100px; padding-right:100px; text-align: center;">
-          {{ messages[i] }}
-        </h2>
+<!--        <div class="module">-->
+<!--          <header>-->
+<!--            <h1>-->
+<!--              Skyscraper-->
+<!--            </h1>-->
+<!--          </header>-->
+<!--        </div>-->
+        <div class="content-container">
+          <div class="modal">
+            <div style="text-shadow: 0 3px black;position: relative;z-index: 1;background-size: 30px 30px ; color:white; position: relative;top: 30%; width: 100%; padding-left: 10px; padding-right:10px; text-align: center;">
+              <h2>
+                {{ messages[i] }}
+              </h2>
+            </div>
+          </div>
+        </div>
         <!-- <h3 style="margin-top:-100px">
               <a href="/bestplace">{{ messages[i] }}</a>
         </h3> -->
