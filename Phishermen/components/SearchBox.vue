@@ -73,7 +73,7 @@ export default {
     search: null
   }),
   computed: {
-    items() {
+    items () {
       if (this.isMultiple || this.isObj) {
         return this.entries
       } else {
@@ -85,12 +85,12 @@ export default {
   },
 
   watch: {
-    search(val) {
+    search (val) {
       // Items have already been loaded
-      if (this.items.length > 0) return
+      if (this.items.length > 0) { return }
 
       // Items have already been requested
-      if (this.isLoading) return
+      if (this.isLoading) { return }
 
       this.isLoading = true
 
@@ -109,12 +109,12 @@ export default {
     }
   },
   methods: {
-    input() {
+    input () {
       this.$emit(this.label.toLowerCase(), this.model)
     },
-    remove(item) {
-      const index = this.model.findIndex((a) => a === item)
-      if (index >= 0) this.model.splice(index, 1)
+    remove (item) {
+      const index = this.model.findIndex(a => a === item)
+      if (index >= 0) { this.model.splice(index, 1) }
     }
   }
 }

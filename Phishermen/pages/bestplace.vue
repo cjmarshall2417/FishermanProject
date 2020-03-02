@@ -46,15 +46,15 @@ export default {
     isSubmit: false
   }),
   methods: {
-    getMonth(month) {
+    getMonth (month) {
       this.month = month
     },
-    getSystem(system) {
+    getSystem (system) {
       this.system = system
     },
-    submit() {
+    submit () {
       // console.log(this.system)
-      if (this.system === undefined || this.month === undefined) return
+      if (this.system === undefined || this.month === undefined) { return }
       const formData = new FormData()
       for (let i = 0; i < this.system.length; i++) {
         formData.append('listOfSystems', this.system[i])
@@ -64,7 +64,7 @@ export default {
       this.data = []
       this.xaxis = []
       this.$axios
-        .$post(`BestPlaceToFishDuringMonth`, formData, {
+        .$post('BestPlaceToFishDuringMonth', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }

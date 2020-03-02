@@ -1,144 +1,145 @@
+<style>
+  .modal {
+    margin: auto;
+    background-color: rgba(255, 255, 255, 0.40);
+    border-radius: 5px;
+    color: #333;
+    font-family: sans-serif;
+    line-height: 1.5;
+    margin-top:15%;
+    width:auto;
+    max-width: fit-content;
+    padding: 1rem 2rem;
+    backdrop-filter: blur(1px);
+    background-color: rgba(0, 0, 0, 0.5);
+    a {
+      color: #bf0222;
+    }
+  }
+  .content-container {
+    align-items: center;
+    justify-content: center;
+    position: center;
+    padding-left: 5px;
+    padding-right: 5px;
+    height: 100%;
+    width: auto%;
+  }
+</style>
 <template>
   <div>
     <v-row>
-      <v-col> </v-col>
-      <v-col>
+      <span style="margin: auto;">
         <h1>WELCOME FISHERMEN</h1>
-      </v-col>
-      <v-col> </v-col>
+      </span>
     </v-row>
+    <br>
     <v-carousel
       cycle
-      height="400"
-      hide-delimiter-background
+      interval="5000"
       show-arrows-on-hover
     >
-      <v-carousel-item>
-        <v-sheet height="100%">
-          <v-row class="fill-height" align="center" justify="center">
-            <v-col> </v-col>
-            <v-col>
-              <img width="600" height="300" src="~/assets/YakRiver.jpg" />
-            </v-col>
-            <v-col>
-              <h3 style="margin-top:-100px"><a href="/bestplace">Fish for the Best Location!</a></h3>
-            </v-col>
-          </v-row>
-        </v-sheet>
-      </v-carousel-item>
-      <v-carousel-item>
-        <v-sheet height="100%">
-          <v-row>
-            <v-col> </v-col>
-            <v-col>
-              <h3><a href="/bestmonth">Fish for the Best Season!</a></h3>
-            </v-col>
-            <v-col> </v-col>
-          </v-row>
-          <v-row class="fill-height" align="center" justify="center">
-            <v-col> </v-col>
-            <v-col>
-              <img
-                style="layout:auto; margin-top:-90px"
-                src="~/assets/lakechelan.jpg"
-              />
-            </v-col>
-
-            <v-col> </v-col>
-          </v-row>
-        </v-sheet>
-      </v-carousel-item>
-      <v-carousel-item>
-        <v-sheet height="100%">
-          <v-row class="fill-height" align="center" justify="center">
-            <v-col>
-            </v-col>
-            <v-col>
-              <img
-                width="800"
-                height="600"
-                style="layout:auto; margin-top:-70px; margin-left:-200px"
-                src="~/assets/12_Fishing.jpg"
-                align="center"
-              />
-            </v-col>
-            <v-col>
-            <h4 style="width:100%;layout:auto;margin-top:-100px">
-              The Fishermen website is a tool to analyze the best place to fish,
-              and the best time to fish. Search any fishing location in
-              Washington State and you will find the best time to fish in that
-              spot. Or you can seach by month to find the best place to go
-              fishing for that particular time. Finding the best time and place
-              to fish will give you an advantage over your fellow fishermen!
-            </h4>
-            </v-col>
-          </v-row>
-        </v-sheet>
-      </v-carousel-item>
-      <v-carousel-item>
-        <v-sheet height="100%">
-          <v-row class="fill-height" align="center" justify="center">
-            <img
-              style="layout:auto; margin-top:-230px"
-              src="~/assets/Steelhead-Washington-state-fish.jpg"
-            />
-          </v-row>
-        </v-sheet>
-      </v-carousel-item>
-      <v-carousel-item>
-        <v-sheet height="100%">
-          <v-row class="fill-height" align="center" justify="center">
-            <div class="container">
-              <img
-                style="layout:auto; margin-left:200px"
-                src="~/assets/lakechelan.jpg"
-                align="center"
-              />
+      <v-carousel-item
+        v-for="(item, i) in items"
+        :key="i"
+        reverse-transition="fade-transition"
+        :src="item.src"
+        style="align-content: center"
+      >
+<!--        <div class="module">-->
+<!--          <header>-->
+<!--            <h1>-->
+<!--              Skyscraper-->
+<!--            </h1>-->
+<!--          </header>-->
+<!--        </div>-->
+        <div class="content-container">
+          <div class="modal">
+            <div style="text-shadow: 0 3px black;position: relative;z-index: 1;background-size: 30px 30px ; color:white; position: relative;top: 30%; width: 100%; padding-left: 10px; padding-right:10px; text-align: center;">
+              <h2 v-if="locationss[i] !== ''">
+                <a :href="locationss[i]">
+                {{ messages[i] }}
+                </a>
+              </h2>
+              <h2 v-else :href="locationss[i]">
+                  {{ messages[i] }}
+              </h2>
             </div>
-          </v-row>
-        </v-sheet>
+          </div>
+        </div>
+        <!-- <h3 style="margin-top:-100px">
+              <a href="/bestplace">{{ messages[i] }}</a>
+        </h3> -->
       </v-carousel-item>
     </v-carousel>
   </div>
 </template>
 
 <script>
-import SearchBox from "../components/SearchBox";
-import ColumnChart from "../components/ColumnChart";
+// import Yak from "../assets/YakRiver.jpg";
 export default {
-  components: { ColumnChart, SearchBox },
   data: () => ({
-    area: null,
-    system: null,
-    data: [],
-    xaxis: [],
-    isSubmit: false
-  }),
-  methods: {
-    getArea(area) {
-      this.area = area;
-    },
-    getSystem(system) {
-      this.system = system;
-    },
-    submit() {
-      this.data = [];
-      this.xaxis = [];
-      this.$axios
-        .$get(`BestMonthInArea?areaNumber=${this.area.areaNumber}`)
-        .then(res => {
-          console.log(res);
-          for (let i = 0; i < res.length; i++) {
-            this.data.push(res[i].fishCaught);
-            this.xaxis.push(res[i].month);
-          }
-        })
-        .then(() => {
-          this.isSubmit = true;
-        });
-      // console.log(this.area.areaNumber)
-      // console.log(this.system)
-    }
-  }
-};
+    images: [
+      '~/assets/lakechelan.jpg',
+      'assets/12_Fishing.jpg',
+      'assets/Steelhead-Washington-state-fish.jpg',
+      '~/assets/Fleet.jpg'
+    ],
+    items: [
+
+      {
+        src: '/YakRiver.jpg'
+      },
+      {
+        src: '/12_Fishing.jpg'
+      },
+      {
+        src: '/Steelhead-Washington-state-fish.jpg'
+      },
+      {
+        src: '/Fleet.jpg'
+      }
+      // {
+      //   src: "assets/12_Fishing.jpg"
+      // },
+      // {
+      //   src: "assets/Steelhead-Washington-state-fish.jpg"
+      // },
+      // {
+      //   src: "~/assets/Fleet.jpg"
+      // }
+    ],
+    locationss: [
+
+      '/bestplace',
+      '/bestmonth',
+      '',
+      ''
+    ],
+    locations: [
+
+      {
+        href: '/bestmonth'
+      },
+      {
+        href: '/bestplace'
+      },
+      {
+        href: ''
+      },
+      {
+        href: ''
+      }
+    ],
+    messages: [
+      'Fish for the Best Location!',
+      'Fish for the Best Season!',
+      'The Fishermen website is the Best tool to find the Best Fishing!',
+      'All in Washington State!'
+    ]
+  })
+}
 </script>
+<!--'The Fishermen website is a tool to search any fishing location in Washington State and by any month to find the best place to go fishing with your fellow fishermen!',-->
+
+<!--//'The Fishermen website is a tool to analyze the best place to fish, and the best time to fish. Search any fishing location in Washington State and you will find the best time to fish in that spot. Or you can seach by month to find the best place to go fishing for that particular time. Finding the best time and place to fish will give you an advantage over your fellow fishermen!',-->
