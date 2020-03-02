@@ -1,9 +1,9 @@
 <template>
   <div>
     <v-row>
-        <span style="margin: auto;">
-          <h1>WELCOME FISHERMEN</h1>
-        </span>
+      <span style="margin: auto;">
+        <h1>WELCOME FISHERMEN</h1>
+      </span>
     </v-row>
     <br>
     <v-carousel
@@ -17,10 +17,12 @@
         reverse-transition="fade-transition"
         :src="item.src"
       >
-        <h3 style="position: absolute;left: 0;top: 50%; width: 100%;text-align: center;font-size: 18px;">{{ messages[i] }}</h3>
+        <h2 style="color:white; position: absolute;left: 0;top: 30%; width: 100%; padding-left: 100px; padding-right:100px; text-align: center;">
+          {{ messages[i] }}
+        </h2>
         <!-- <h3 style="margin-top:-100px">
               <a href="/bestplace">{{ messages[i] }}</a>
-            </h3> -->
+        </h3> -->
       </v-carousel-item>
     </v-carousel>
   </div>
@@ -63,9 +65,12 @@ export default {
     messages: [
       'Fish for the Best Location!',
       'Fish for the Best Season!',
-      'The Fishermen website is a tool to analyze the best place to fish, and the best time to fish. Search any fishing location in Washington State and you will find the best time to fish in that spot. Or you can seach by month to find the best place to go fishing for that particular time. Finding the best time and place to fish will give you an advantage over your fellow fishermen!',
+      'The Fishermen website is the Best tool to find the Best Fishing!',
       'All in Washington State!'
     ]
   })
 }
 </script>
+<!--'The Fishermen website is a tool to search any fishing location in Washington State and by any month to find the best place to go fishing with your fellow fishermen!',-->
+
+<!--//'The Fishermen website is a tool to analyze the best place to fish, and the best time to fish. Search any fishing location in Washington State and you will find the best time to fish in that spot. Or you can seach by month to find the best place to go fishing for that particular time. Finding the best time and place to fish will give you an advantage over your fellow fishermen!',-->
