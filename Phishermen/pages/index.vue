@@ -46,23 +46,23 @@
         :src="item.src"
         style="align-content: center"
       >
-<!--        <div class="module">-->
-<!--          <header>-->
-<!--            <h1>-->
-<!--              Skyscraper-->
-<!--            </h1>-->
-<!--          </header>-->
-<!--        </div>-->
+        <!--        <div class="module">-->
+        <!--          <header>-->
+        <!--            <h1>-->
+        <!--              Skyscraper-->
+        <!--            </h1>-->
+        <!--          </header>-->
+        <!--        </div>-->
         <div class="content-container">
           <div class="modal">
             <div style="text-shadow: 0 3px black;position: relative;z-index: 1;background-size: 30px 30px ; color:white; position: relative;top: 30%; width: 100%; padding-left: 10px; padding-right:10px; text-align: center;">
               <h2 v-if="locationss[i] !== ''">
                 <a :href="locationss[i]">
-                {{ messages[i] }}
+                  {{ messages[i] }}
                 </a>
               </h2>
               <h2 v-else :href="locationss[i]">
-                  {{ messages[i] }}
+                {{ messages[i] }}
               </h2>
             </div>
           </div>
