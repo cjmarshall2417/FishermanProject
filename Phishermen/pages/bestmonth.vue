@@ -47,13 +47,13 @@ export default {
     isSubmit: false
   }),
   methods: {
-    getArea(area) {
+    getArea (area) {
       this.area = area
     },
-    getSystem(system) {
+    getSystem (system) {
       this.system = system
     },
-    async submit() {
+    async submit () {
       this.isSubmit = false
       this.data = []
       // this.xaxis = []

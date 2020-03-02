@@ -5,7 +5,7 @@
       height="350"
       :options="chartOptions"
       :series="series"
-    ></apexchart>
+    />
   </div>
 </template>
 
@@ -14,13 +14,13 @@ export default {
   name: 'MulRadarChart',
   props: {
     data: {
-      default() {
+      default () {
         return ['100']
       },
       type: Array
     }
   },
-  data() {
+  data () {
     return {
       chartOptions: {
         chart: {
@@ -65,7 +65,7 @@ export default {
     }
   },
   computed: {
-    series() {
+    series () {
       return this.data
     }
   }

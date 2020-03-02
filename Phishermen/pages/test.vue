@@ -5,14 +5,14 @@
       height="350"
       :options="chartOptions"
       :series="series"
-    ></apexchart>
+    />
   </div>
 </template>
 
 <script>
 export default {
   name: 'Test',
-  data() {
+  data () {
     return {
       series: [
         {
@@ -51,7 +51,7 @@ export default {
         },
         tooltip: {
           y: {
-            formatter(val) {
+            formatter (val) {
               return val
             }
           }
@@ -71,7 +71,7 @@ export default {
         yaxis: {
           tickAmount: 7,
           labels: {
-            formatter(val, i) {
+            formatter (val, i) {
               if (i % 2 === 0) {
                 return val
               } else {

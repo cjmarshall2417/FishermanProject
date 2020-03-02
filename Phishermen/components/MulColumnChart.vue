@@ -5,7 +5,7 @@
       height="350"
       :options="chartOptions"
       :series="series"
-    ></apexchart>
+    />
   </div>
 </template>
 
@@ -14,17 +14,17 @@ export default {
   name: 'MulColumnChart',
   props: {
     data: {
-      default() {
+      default () {
         return ['100']
       },
       type: Array
     }
   },
   computed: {
-    series() {
+    series () {
       return this.data
     },
-    chartOptions() {
+    chartOptions () {
       return {
         chart: {
           type: 'bar',
@@ -71,7 +71,7 @@ export default {
         },
         tooltip: {
           y: {
-            formatter(val) {
+            formatter (val) {
               return val + ' fishes'
             }
           }

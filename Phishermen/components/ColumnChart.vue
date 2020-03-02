@@ -5,7 +5,7 @@
       height="350"
       :options="chartOptions"
       :series="series"
-    ></apexchart>
+    />
   </div>
 </template>
 
@@ -14,20 +14,20 @@ export default {
   name: 'ColumnChart',
   props: {
     data: {
-      default() {
+      default () {
         return ['1']
       },
       type: Array
     },
     xaxis: {
-      default() {
+      default () {
         return ['a']
       },
       type: Array
     }
   },
   computed: {
-    series() {
+    series () {
       return [
         {
           name: 'Fish',
@@ -35,13 +35,13 @@ export default {
         }
       ]
     },
-    chartOptions() {
+    chartOptions () {
       return {
         chart: {
           height: 350,
           type: 'bar',
           events: {
-            click(chart, w, e) {
+            click (chart, w, e) {
               // console.log(chart, w, e)
             }
           }
