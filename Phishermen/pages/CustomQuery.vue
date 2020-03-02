@@ -81,9 +81,10 @@
       </v-col>
     </v-row>
     <br>
-
     <div v-if="!groupedDisplay">
-      <table>
+      <v-data-table :items="customQueryResults" :headers="headers"></v-data-table>
+    <br>
+    <table>
         <tr>
           <th>Year</th>
           <th>Month</th>
@@ -120,12 +121,21 @@
 </template>
 
 <script>
-
 export default {
 
   data () {
     return {
       customQueryResults: [],
+
+      headers: [
+        { text: 'Year', value: 'year' },
+        { text: 'Month', value: 'month' },
+        { text: 'Area Number', value: 'areaNumber' },
+        { text: 'Area Name', value: 'areaName' },
+        { text: 'Fish Caught', value: 'fishCaught' },
+        { text: 'System', value: 'system' },
+        { text: 'Region', value: 'region' }
+      ],
 
       baseURL: '../api/CustomQuery?',
       url: '../api/CustomQuery?',
@@ -265,7 +275,7 @@ export default {
       const saveQueryURL = this.saveQueryURL
       const finalURL = saveQueryURL + encodeURIComponent(url) + '&queryName=' + queryName
       alert(finalURL)
-      this.$axios.post(finalURL).then((value) => { console.log(value) })
+      this.$axios.post(finalURL).then((value) => { alert('Query Saved') })
     },
 
     resetURL () {
