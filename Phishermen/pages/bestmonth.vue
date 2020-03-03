@@ -71,7 +71,6 @@ export default {
         }
       }
       this.isSubmit = true
-      console.log(this.data)
       // this.$axios
       //   .$get(`BestMonthInArea?areaNumber=${this.area.areaNumber}`)
       //   .then((res) => {

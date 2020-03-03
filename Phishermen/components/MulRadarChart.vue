@@ -34,7 +34,7 @@ export default {
           }
         },
         title: {
-          text: 'Radar Chart - Multi Series'
+          text: ''
         },
         stroke: {
           width: 0
