@@ -79,9 +79,6 @@ export default {
    ** Build configuration
    */
   generate: {
-    exclude: [
-      /^(?=.*\bignore\b).*$/
-    ],
     fallback: false
   },
   build: {

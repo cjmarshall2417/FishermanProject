@@ -1,12 +1,10 @@
 <style>
   .modal {
-    margin: auto;
-    background-color: rgba(255, 255, 255, 0.40);
     border-radius: 5px;
     color: #333;
     font-family: sans-serif;
     line-height: 1.5;
-    margin-top:15%;
+    margin: 15% auto auto;
     width:auto;
     max-width: fit-content;
     padding: 1rem 2rem;
@@ -24,16 +22,16 @@
     padding-right: 5px;
     margin-bottom: -40px;
     height: 100%;
-    width: auto%;
+    width: auto;
   }
 </style>
 
 <template>
   <v-container>
     <v-row>
-      <span style="margin: auto;">
-        <h1 class="display-3 green--text font-weight-bold">WELCOME FISHERMEN</h1>
-      </span>
+      <h1 class="display-3 green--text font-weight-bold" style="margin: auto">
+        WELCOME FISHERMEN
+      </h1>
     </v-row>
     <br>
     <!--Displaying the carousel-->
@@ -54,14 +52,14 @@
           <div class="content-container">
             <div class="modal">
               <div style="text-shadow: 0 3px black;position: relative;z-index: 1;background-size: 30px 30px ; color:white; position: relative;top: 30%; width: 100%; padding-left: 10px; padding-right:10px; text-align: center;">
-                <h4 v-if="locationss[i] !== ''">
+                <h5 v-if="locationss[i] !== ''">
                   <a :href="locationss[i]">
                     {{ messages[i] }}
                   </a>
-                </h4>
-                <h4 v-else :href="locationss[i]">
+                </h5>
+                <h5 v-else :href="locationss[i]">
                   {{ messages[i] }}
-                </h4>
+                </h5>
               </div>
             </div>
           </div>
