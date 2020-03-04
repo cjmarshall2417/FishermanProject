@@ -1,24 +1,24 @@
-
 <template>
   <div>
     <div v-if="advancedDisplay">
-    <v-text-field v-model="queryName" label="Enter a Name for Your Query" style="width='700px'"/>
-    <v-btn @click="saveQuery()">
-      Save Query
-    </v-btn>
-    <v-autocomplete
-              v-model="selectedUserQuery"
-              :items="userQueries"
-              item-text="queryName"
-              item-value="queryUrl"
-              label="Select a user query."
-              @change="fillTable(selectedUserQuery)"/>
+      <v-text-field v-model="queryName" label="Enter a Name for Your Query" style="width: 700px" />
+      <v-btn @click="saveQuery()">
+        Save Query
+      </v-btn>
+      <v-autocomplete
+        v-model="selectedUserQuery"
+        :items="userQueries"
+        item-text="queryName"
+        item-value="queryUrl"
+        label="Select a user query."
+        @change="fillTable(selectedUserQuery)"
+      />
 
-    <p>{{ completeURL }}</p>
-    <v-btn @click="fillTable()">
-      Refresh Table
-    </v-btn>
-    <br>
+      <p>{{ completeURL }}</p>
+      <v-btn @click="fillTable()">
+        Refresh Table
+      </v-btn>
+      <br>
     </div>
     <v-btn @click="advancedDisplay = !advancedDisplay">
       Advanced Display
@@ -91,10 +91,10 @@
 
       <v-col>
         <div v-if="groupedDisplay">
-        <v-select v-model="selectedGroupSortBy" :items="validGroupSortBy" label="Select Column To Sort By" @change="fillTable()" />
+          <v-select v-model="selectedGroupSortBy" :items="validGroupSortBy" label="Select Column To Sort By" @change="fillTable()" />
         </div>
         <div v-else>
-        <v-autocomplete v-model="selectedSortBy" :items="validSortBy" label="Select Column To Sort By" @change="fillTable()" />
+          <v-autocomplete v-model="selectedSortBy" :items="validSortBy" label="Select Column To Sort By" @change="fillTable()" />
         </div>
       </v-col>
     </v-row>
@@ -322,11 +322,3 @@ export default {
 
 }
 </script>
-
-<style>
-.v-select {
-    width:250px;
-    color:"red";
-
-}
-</style>

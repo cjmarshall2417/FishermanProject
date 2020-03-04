@@ -52,7 +52,7 @@ export default {
    ** See https://axios.nuxtjs.org/options
    */
   axios: {
-    baseURL: 'https://localhost:5001/api/'
+    baseURL: 'https://fishermen.azurewebsites.net/api/'
   },
   /*
    ** vuetify module configuration
