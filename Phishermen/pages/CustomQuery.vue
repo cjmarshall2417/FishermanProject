@@ -1,34 +1,47 @@
 
 <template>
   <div>
-    <span>Query Name: </span><input v-model="queryName" style="width: 700px" type="text">
+    <div v-if="advancedDisplay">
+    <v-text-field v-model="queryName" label="Enter a Name for Your Query" style="width='700px'"/>
     <v-btn @click="saveQuery()">
       Save Query
     </v-btn>
-    <v-select v-model="selectedUserQuery" :items="userQueries" label="Select a user query." @change="fillTable(selectedUserQuery)" />
+    <v-autocomplete
+              v-model="selectedUserQuery"
+              :items="userQueries"
+              item-text="queryName"
+              item-value="queryUrl"
+              label="Select a user query."
+              @change="fillTable(selectedUserQuery)"/>
 
     <p>{{ completeURL }}</p>
     <v-btn @click="fillTable()">
       Refresh Table
-    </v-btn><v-btn @click="resetURL()">
+    </v-btn>
+    <br>
+    </div>
+    <v-btn @click="advancedDisplay = !advancedDisplay">
+      Advanced Display
+    </v-btn>
+    <v-btn @click="resetURL()">
       Reset
-    </v-btn><br>
+    </v-btn>
     <v-row>
       <v-col>
-        <v-select v-model="selectedYear" :items="validYears" label="Select a Year" />
+        <v-autocomplete v-model="selectedYear" :items="validYears" label="Select a Year" />
 
         <v-btn @click="addFilter('years', selectedYear)">
           Add Year Filter
         </v-btn>
       </v-col>
       <v-col>
-        <v-select v-model="selectedMonth" :items="validMonths" item-text="monthName" item-value="monthNumber" label="Select a Month" />
+        <v-autocomplete v-model="selectedMonth" :items="validMonths" item-text="monthName" item-value="monthNumber" label="Select a Month" />
         <v-btn @click="addFilter('months', selectedMonth)">
           Add Month Filter
         </v-btn>
       </v-col>
       <v-col>
-        <v-select v-model="selectedArea" :items="validAreas" :item-text="item => item.areaNumber +': '+ item.areaName" item-value="areaNumber" label="Select an Area" />
+        <v-autocomplete v-model="selectedArea" :items="validAreas" :item-text="item => item.areaNumber +': '+ item.areaName" item-value="areaNumber" label="Select an Area" />
         <v-btn @click="addFilter('areaNumbers', selectedArea)">
           Add Area Filter
         </v-btn>
@@ -37,25 +50,25 @@
 
     <v-row>
       <v-col>
-        <v-select v-model="selectedRegion" :items="validRegions" label="Select a Region" />
+        <v-autocomplete v-model="selectedRegion" :items="validRegions" label="Select a Region" />
         <v-btn @click="addFilter('regions', selectedRegion)">
           Add Region Filter
         </v-btn>
       </v-col>
 
       <v-col>
-        <v-select v-model="selectedSystem" :items="validSystems" label="Select a System" />
+        <v-autocomplete v-model="selectedSystem" :items="validSystems" label="Select a System" />
         <v-btn @click="addFilter('systems', selectedSystem)">
           Add System Filter
         </v-btn>
       </v-col>
 
       <v-col>
-        <v-select v-model="selectedGroupBy" :items="validGroupBys" label="Choose a Group By" @change="fillTable()" />
+        <v-autocomplete v-model="selectedGroupBy" :items="validGroupBys" label="Select a Column To Group" @change="fillTable()" />
       </v-col>
 
       <v-col>
-        <v-select v-model="selectedAggregate" :items="validAggregates" label="Choose an Aggregate" @change="fillTable()" />
+        <v-autocomplete v-model="selectedAggregate" :items="validAggregates" label="Select Group Data" @change="fillTable()" />
       </v-col>
     </v-row>
 
@@ -73,11 +86,16 @@
       </v-col>
 
       <v-col>
-        <v-select v-model="selectedSort" :items="validSorts" @change="fillTable()" />
+        <v-select v-model="selectedSort" :items="validSorts" label="Select Sort Order" @change="fillTable()" />
       </v-col>
 
       <v-col>
-        <v-select v-model="selectedSortBy" :items="validSortBy" @change="fillTable()" />
+        <div v-if="groupedDisplay">
+        <v-select v-model="selectedGroupSortBy" :items="validGroupSortBy" label="Select Column To Sort By" @change="fillTable()" />
+        </div>
+        <div v-else>
+        <v-autocomplete v-model="selectedSortBy" :items="validSortBy" label="Select Column To Sort By" @change="fillTable()" />
+        </div>
       </v-col>
     </v-row>
     <br>
@@ -152,13 +170,15 @@ export default {
       validSystems: [],
       validSystemsURL: '../api/GetSystems',
       validGroupBys: ['None', 'Date', 'Year', 'Month', 'AreaNumber', 'System', 'Region'],
-      validAggregates: ['Sum', 'Average'],
+      validAggregates: ['Sum', 'Average', 'Max', 'Min'],
       validSorts: ['Ascending', 'Descending'],
-      validSortBy: ['Group Name', 'Fish Caught'],
+      validSortBy: ['Year', 'Month', 'System', 'AreaNumber', 'Region', 'FishCaught'],
+      validGroupSortBy: ['Group Name', 'Fish Caught'],
       saveQueryURL: '../api/SaveQuery?queryURL=',
       getUserQueriesURL: '../api/GetUserQueries',
       userQueries: [],
 
+      advancedDisplay: false,
       groupedDisplay: false,
       queryName: '',
       selectedRegion: null,
@@ -170,7 +190,8 @@ export default {
       selectedGroupBy: 'None',
       selectedUserQuery: null,
       selectedSort: 'Ascending',
-      selectedSortBy: 'Group Name',
+      selectedSortBy: 'AreaNumber',
+      selectedGroupSortBy: 'Group Name',
       haulGreaterThan: 0,
       haulLessThan: 10000,
       rows: 1000
@@ -185,18 +206,15 @@ export default {
       url += 'haulLessThan=' + this.haulLessThan + '&'
       url += 'rows=' + this.rows + '&'
       url += 'groupBy=' + this.selectedGroupBy + '&'
-      if (this.selectedAggregate === 'Sum') {
-        url += 'average=false&'
-      }
-
       if (this.selectedSort === 'Descending') {
         url += 'sortAscending=false&'
       }
-
-      if (this.selectedSortBy === 'Fish Caught') {
-        url += 'sortByKey=false&'
+      if (this.groupedDisplay) {
+        url += 'sortBy=' + this.selectedGroupSortBy + '&'
+        url += 'aggregate=' + this.selectedAggregate + '&'
+      } else {
+        url += 'sortBy=' + this.selectedSortBy + '&'
       }
-
       return url
     }
 
@@ -280,6 +298,9 @@ export default {
 
     resetURL () {
       this.url = this.baseURL
+      this.selectedSortBy = 'AreaNumber'
+      this.selectedGroupBy = 'None'
+      this.fillTable()
     },
 
     buildCompleteURL () {
@@ -305,6 +326,7 @@ export default {
 <style>
 .v-select {
     width:250px;
+    color:"red";
 
 }
 </style>

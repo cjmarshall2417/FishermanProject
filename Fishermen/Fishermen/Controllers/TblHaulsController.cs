@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Web;
 using Microsoft.Extensions.Configuration;
 using System.Linq.Dynamic.Core;
-
+using System.Linq.Expressions;
 
 namespace Fishermen.Controllers
 {
@@ -241,13 +241,14 @@ namespace Fishermen.Controllers
         }
         //this query exists to give the user more control over the data. While the other queries answer specific predetermined questions
         //this is closer to the functionality of an excel sheet where the user can apply a bunch of filters on many different columns to 
-        //answer whatever question they choose. I'm still pondering the best way to handle giving the user the ability to use group bys.
+        //answer whatever question they choose.
         [HttpGet]
         [Route("api/CustomQuery")]
         public IActionResult CustomQuery(int[] years, int[] months,
-            int[] areaNumbers, string[] areaNames, string[] regions, string[] systems, string groupBy, bool average = true,
-            int haulGreaterThan = -1, int haulLessThan = -1, int rows = 1000, bool sortAscending = true, bool sortByKey = true)
+            int[] areaNumbers, string[] areaNames, string[] regions, string[] systems, string sortBy, string groupBy = "None", string aggregate = "Average",
+            int haulGreaterThan = -1, int haulLessThan = -1, int rows = 1000, bool sortAscending = true)
         {
+            
             var hauls = fishHauls.TblHauls;
             var locations = fishHauls.TblLocations;
             var regionsTbl = fishHauls.TblRegions;
@@ -268,8 +269,8 @@ namespace Fishermen.Controllers
                               Year = haul.Year,
                               Month = haul.Month
                           };
-            //this applies our filters to the current data
-            //I'm debating making some sort of filter object and iterating over it
+            //this applies the chosen filters to the current data
+            //I'm thinking about how to clean this up
             //but for now this works, even if it looks dumb.
             if (years.Count() > 0)
             {
@@ -304,378 +305,108 @@ namespace Fishermen.Controllers
                 allData = allData.Where(h => h.FishCaught < haulLessThan);
             }
 
-            //lots of code needs to be duplicated because the grouped by data will be in slightly different formats
-            //based on where we grouped by. This prevents me from defining the groupedData variable outside of the inner if statements
+            //managed to clean up a lot of the repeated code through a mixture of reflection and switch expressions.
+            //I knew about switch statements but not expressions and those turned out to be exactly what I needed
 
-            //I tried cleaning up this code by using reflection to do a single group by statement on the correct property
-            //chosen by a string variable but it didn't work, from my research I don't think you can do that when using a database.
-
-            //Next I tried using a dynamic variable but I can't use lambda expressions in the groups/sorts when using a dynamic type
-            //I think to do this properly I would need to use dynamic linq but I've already wasted a fair amount of time on this so it shall
-            //remain as a nightmare of if/else statements for now.
+            //checks if we are doing a group by statement
+            //group by queries will have different columns than non group bys so we have to duplicate the sorting inside of
+            //this portion instead of sorting once for groupBy and non groupBy queries
             if (groupBy != "None")
             {
+                //date is on it's own because sorting and grouping both require two variables.
+                //I could get rid of this using more switch expressions but for the amount of code saved
+                //it doesn't seem worth the hassle and more confusing layout.
                 if (groupBy == "Date")
                 {
-
-                    var formattedData = allData.Select(h => new {Date = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(h.Month) + " " + h.Year.ToString(), FishCaught = h.FishCaught });
+                    var formattedData = allData.Select(h => new { Date = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(h.Month) + " " + h.Year.ToString(), FishCaught = h.FishCaught });
                     var groupedData = formattedData.ToList().GroupBy(g => g.Date);//the linq query breaks if I don't use ToList before the group by
-                    //I don't know why.
-                    
-                    if (average)
+                                                                                  
+                    var result = groupedData.Select(g => new
                     {
-                        //I'm using vague property names here to make this data easier to work with on the front end
-                        //If the property names were different in each group by they would have to access the keys by index rather than
-                        //by name like has been done in the rest of the queries.
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
-                        if (sortAscending)
+                        GroupKey = g.Key,
+                        FishCaught = aggregate switch
                         {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey.ToString().Split()[1]).ThenBy(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0]));
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
+                            "Sum" => g.Sum(h => h.FishCaught),
+                            "Average" => g.Sum(h => h.FishCaught) / g.Count(),
+                            "Max" => g.Max(h => h.FishCaught),
+                            "Min" => g.Min(h => h.FishCaught),
+                            _ => g.Sum(h => h.FishCaught)
                         }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey.ToString().Split()[1]).ThenByDescending(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0]));
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
-                    else
-                    {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
-                        if (sortAscending)
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey.ToString().Split()[1]).ThenBy(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0])); ;
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey.ToString().Split()[1]).ThenByDescending(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0]));
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
-                }
-                else if (groupBy == "Month")
-                {
-                    var groupedData = allData.GroupBy(h => h.Month);
-                    if (average)
-                    {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
-                        if (sortAscending)
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
-                    else
-                    {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
-                        if (sortAscending)
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
-                }
-                else if (groupBy == "Year")
-                {
-                    var groupedData = allData.GroupBy(h => h.Year);
+                    });
 
-                    if (average)
+                    result = sortAscending switch
                     {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
-                        if (sortAscending)
+                        true => sortBy switch
                         {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
+                            "Group Name" => result.OrderBy(g => g.GroupKey.ToString().Split()[1]).ThenBy(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0])),
+                            "Fish Caught" => result.OrderBy(g => g.FishCaught),
+                            _ => result.OrderBy(g => g.GroupKey)
+                        },
+                        false => sortBy switch
                         {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
+                            "Group Name" => result.OrderByDescending(g => g.GroupKey.ToString().Split()[1]).ThenByDescending(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0])),
+                            "Fish Caught" => result.OrderByDescending(g => g.FishCaught),
+                            _ => result.OrderByDescending(g => g.GroupKey)
                         }
-                        return Json(result);
-                    }
-                    else
-                    {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
-                        if (sortAscending)
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
-                }
-                else if (groupBy == "Area")
-                {
-                    var groupedData = allData.GroupBy(h => h.AreaNumber);
-                    if (average)
-                    {
 
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
-                        if (sortAscending)
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
-                    else
-                    {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
-                        if (sortAscending)
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
+                    };
+                    return Json(result);
                 }
-                else if (groupBy == "Region")
+                //can use reflection for all groupBys other than date
+                else
                 {
-                    var groupedData = allData.GroupBy(h => h.Region);
-                    groupedData = groupedData.OrderBy(g => g.Key);
-                    if (average)
+                    var groupedData = allData.ToList().GroupBy(h => h.GetType().GetProperty(groupBy).GetValue(h, null));
+
+                    var result = groupedData.Select(g => new
                     {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
-                        if (sortAscending)
+                        GroupKey = g.Key,
+                        FishCaught = aggregate switch
                         {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
+                            "Sum" => g.Sum(h => h.FishCaught),
+                            "Average" => g.Sum(h => h.FishCaught) / g.Count(),
+                            "Max" => g.Max(h => h.FishCaught),
+                            "Min" => g.Min(h => h.FishCaught),
+                            _ => g.Sum(h => h.FishCaught)
                         }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
-                    else
+                    });
+
+                    result = sortAscending switch
                     {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
-                        if (sortAscending)
+                        true => sortBy switch
                         {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
+                            "Group Name" => result.OrderBy(g => g.GroupKey),
+                            "Fish Caught" => result.OrderBy(g => g.FishCaught),
+                            _ => result.OrderBy(g => g.GroupKey)
+                        },
+                        false => sortBy switch
                         {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
+                            "Group Name" => result.OrderByDescending(g => g.GroupKey),
+                            "Fish Caught" => result.OrderByDescending(g => g.FishCaught),
+                            _ => result.OrderByDescending(g => g.GroupKey)
                         }
-                        return Json(result);
-                    }
-                }
-                else if (groupBy == "System")
-                {
-                    var groupedData = allData.GroupBy(h => h.System);
-                    groupedData = groupedData.OrderBy(g => g.Key);
-                    if (average)
-                    {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) / g.Count() });
-                        if (sortAscending)
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
-                    else
-                    {
-                        var result = groupedData.Select(g => new { GroupKey = g.Key, FishCaught = g.Sum(h => h.FishCaught) });
-                        if (sortAscending)
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderBy(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderBy(g => g.FishCaught);
-                            }
-                        }
-                        else
-                        {
-                            if (sortByKey)
-                            {
-                                result = result.OrderByDescending(g => g.GroupKey);
-                            }
-                            else
-                            {
-                                result = result.OrderByDescending(g => g.FishCaught);
-                            }
-                        }
-                        return Json(result);
-                    }
+
+                    };
+                   
+                    return Json(result);
                 }
             }
-            return Json(allData.Take(rows));//now that we've done all the filtering we can apply our row count filter
+            //if we're here that means no group by, so we need to sort before returning our chosen number of rows
+            if (sortBy != null && sortBy != "Group Name" && sortBy != "Fish Caught")
+            {
+                if (sortAscending)
+                {
+                    var sortedData = allData.ToList().OrderBy(h => h.GetType().GetProperty(sortBy).GetValue(h));
+                    return Json(sortedData.Take(rows));
+                }
+                else
+                {
+                    var sortedData = allData.ToList().OrderByDescending(h => h.GetType().GetProperty(sortBy).GetValue(h));
+                    return Json(sortedData.Take(rows));
+                }
+            }
+
+            return Json(allData.Take(rows));
+            
         }
         
 
@@ -696,6 +427,17 @@ namespace Fishermen.Controllers
         public string GetUrlPath()
         {
             return HttpContext.Request.Path.Value + HttpContext.Request.QueryString.Value;
+        }
+
+        public class Group
+        {
+            public string GroupKey;
+            public int FishCaught;
+            public Group(string groupKey, int fishCaught)
+            {
+                this.GroupKey = groupKey;
+                this.FishCaught = fishCaught;
+            }
         }
 
        
