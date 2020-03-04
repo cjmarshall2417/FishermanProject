@@ -100,9 +100,9 @@
     </v-row>
     <br>
     <div v-if="!groupedDisplay">
-      <v-data-table :items="customQueryResults" :headers="headers"></v-data-table>
-    <br>
-    <table>
+      <v-data-table :items="customQueryResults" :headers="headers" />
+      <br>
+      <table>
         <tr>
           <th>Year</th>
           <th>Month</th>

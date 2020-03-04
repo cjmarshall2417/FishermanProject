@@ -38,7 +38,7 @@ export default {
     chartOptions () {
       return {
         chart: {
-          height: 350,
+          height: 600,
           type: 'bar',
           events: {
             click (chart, w, e) {
