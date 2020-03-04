@@ -28,7 +28,7 @@ namespace Fishermen
                 options.AddPolicy(MyAllowSpecificOrigins,
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000").AllowAnyHeader();
+                        builder.AllowAnyOrigin().AllowAnyHeader();
                     });
             });
             string secretUri = "https://phishermen.vault.azure.net/secrets/Phishing/7f85a155194d43cc80dea03cf1df6cf4";
@@ -63,6 +63,7 @@ namespace Fishermen
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapFallbackToController("Index", "Home");
             });
         }
     }

@@ -56,7 +56,7 @@
             class="white--text align-end"
             height="400px"
             flat
-            src="/puget.jpg"
+            src="/images/puget.jpg"
           >
             <v-card-title>Puget Sound</v-card-title>
           </v-img>
@@ -127,7 +127,7 @@
             class="white--text align-end"
             height="400px"
             flat
-            src="/fish.jpg"
+            src="/images/fish.jpg"
           >
             <v-card-title>Salmon</v-card-title>
           </v-img>
@@ -191,30 +191,24 @@
 </template>
 
 <script>
-// import Yak from "../assets/YakRiver.jpg";
+
 import TopTenDialog from '../components/TopTenDialog'
 export default {
   components: { TopTenDialog },
   data: () => ({
     isDialog: [false, false, false, false],
-    images: [
-      '~/assets/lakechelan.jpg',
-      'assets/12_Fishing.jpg',
-      'assets/Steelhead-Washington-state-fish.jpg',
-      '~/assets/Fleet.jpg'
-    ],
     items: [
       {
-        src: '/YakRiver.jpg'
+        src: '/images/YakRiver.jpg'
       },
       {
-        src: '/12_Fishing.jpg'
+        src: '/images/12_Fishing.jpg'
       },
       {
-        src: '/Steelhead-Washington-state-fish.jpg'
+        src: '/images/Steelhead-Washington-state-fish.jpg'
       },
       {
-        src: '/Fleet.jpg'
+        src: '/images/Fleet.jpg'
       }
     ],
     messages: [
@@ -224,10 +218,10 @@ export default {
       'All in Washington State!'
     ],
     regions: [
-      { ID: 6, Name: 'COASTAL', src: '/coastal.jpg' },
-      { ID: 7, Name: 'COLUMBIA', src: '/Columbia.jpg' },
-      { ID: 8, Name: 'PUGET SOUND', src: '/puget.jpg' },
-      { ID: 9, Name: 'UNKNOWN', src: '/unknown.jpg' }
+      { ID: 6, Name: 'COASTAL', src: '/images/coastal.jpg' },
+      { ID: 7, Name: 'COLUMBIA', src: '/images/Columbia.jpg' },
+      { ID: 8, Name: 'PUGET SOUND', src: '/images/puget.jpg' },
+      { ID: 9, Name: 'UNKNOWN', src: '/images/unknown.jpg' }
     ],
     icons: [
       'mdi-facebook',

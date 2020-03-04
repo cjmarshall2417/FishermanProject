@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <div v-if="advancedDisplay">
@@ -30,7 +29,7 @@
     </v-btn>
     <v-row>
       <v-col>
-        <v-list>
+        <v-list>-
           <v-subheader>Filters(Click to Remove):</v-subheader>
           <v-list-item-group v-model="selectedFilter">
             <v-list-item v-for="(item, i) in filters" :key="i" :value="item.Value" @click="removeFilter(item.Value)">
