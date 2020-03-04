@@ -8,6 +8,7 @@
       </v-btn>
       <v-autocomplete
         v-model="selectedUserQuery"
+        class="vAuto"
         :items="userQueries"
         item-text="queryName"
         item-value="queryUrl"
@@ -31,7 +32,7 @@
     <v-row>
       <v-col>
         <!-- The list of current filters -->
-        <v-list>
+        <v-list class="vList">
           <v-subheader>Filters(Click to Remove):</v-subheader>
           <v-list-item-group v-model="selectedFilter">
             <v-list-item v-for="(item, i) in filters" :key="i" :value="item.Value" @click="removeFilter(item.Value)">
@@ -44,20 +45,34 @@
       </v-col>
       <!-- Start of User Inputs -->
       <v-col>
-        <v-autocomplete v-model="selectedYear" :items="validYears" label="Select a Year" />
+        <v-autocomplete v-model="selectedYear" class="vAuto" :items="validYears" label="Select a Year" />
 
         <v-btn @click="addFilter('years', selectedYear)">
           Add Year Filter
         </v-btn>
       </v-col>
       <v-col>
-        <v-autocomplete v-model="selectedMonth" :items="validMonths" item-text="monthName" item-value="monthNumber" label="Select a Month" />
+        <v-autocomplete
+          v-model="selectedMonth"
+          class="vAuto"
+          :items="validMonths"
+          item-text="monthName"
+          item-value="monthNumber"
+          label="Select a Month"
+        />
         <v-btn @click="addFilter('months', selectedMonth)">
           Add Month Filter
         </v-btn>
       </v-col>
       <v-col>
-        <v-autocomplete v-model="selectedArea" :items="validAreas" :item-text="item => item.areaNumber +': '+ item.areaName" item-value="areaNumber" label="Select an Area" />
+        <v-autocomplete
+          v-model="selectedArea"
+          class="vAuto"
+          :items="validAreas"
+          :item-text="item => item.areaNumber +': '+ item.areaName"
+          item-value="areaNumber"
+          label="Select an Area"
+        />
         <v-btn @click="addFilter('areaNumbers', selectedArea)">
           Add Area Filter
         </v-btn>
@@ -66,25 +81,25 @@
 
     <v-row>
       <v-col>
-        <v-autocomplete v-model="selectedRegion" :items="validRegions" label="Select a Region" />
+        <v-autocomplete v-model="selectedRegion" class="vAuto" :items="validRegions" label="Select a Region" />
         <v-btn @click="addFilter('regions', selectedRegion)">
           Add Region Filter
         </v-btn>
       </v-col>
 
       <v-col>
-        <v-autocomplete v-model="selectedSystem" :items="validSystems" label="Select a System" />
+        <v-autocomplete v-model="selectedSystem" class="vAuto" :items="validSystems" label="Select a System" />
         <v-btn @click="addFilter('systems', selectedSystem)">
           Add System Filter
         </v-btn>
       </v-col>
 
       <v-col>
-        <v-autocomplete v-model="selectedGroupBy" :items="validGroupBys" label="Select a Column To Group" @change="fillTable()" />
+        <v-autocomplete v-model="selectedGroupBy" class="vAuto" :items="validGroupBys" label="Select a Column To Group" @change="fillTable()" />
       </v-col>
 
       <v-col>
-        <v-autocomplete v-model="selectedAggregate" :items="validAggregates" label="Select Group Data" @change="fillTable()" />
+        <v-autocomplete v-model="selectedAggregate" class="vAuto" :items="validAggregates" label="Select Group Data" @change="fillTable()" />
       </v-col>
     </v-row>
 
@@ -102,16 +117,16 @@
       </v-col>
 
       <v-col>
-        <v-select v-model="selectedSort" :items="validSorts" label="Select Sort Order" @change="fillTable()" />
+        <v-autocomplete v-model="selectedSort" class="vAuto" :items="validSorts" label="Select Sort Order" @change="fillTable()" />
       </v-col>
 
       <v-col>
         <!-- We need to display different sorts depending on whether or not the current query is using a group by -->
         <div v-if="groupedDisplay">
-          <v-select v-model="selectedGroupSortBy" :items="validGroupSortBy" label="Select Column To Sort By" @change="fillTable()" />
+          <v-autocomplete v-model="selectedGroupSortBy" class="vAuto" :items="validGroupSortBy" label="Select Column To Sort By" @change="fillTable()" />
         </div>
         <div v-else>
-          <v-autocomplete v-model="selectedSortBy" :items="validSortBy" label="Select Column To Sort By" @change="fillTable()" />
+          <v-autocomplete v-model="selectedSortBy" class="vAuto" :items="validSortBy" label="Select Column To Sort By" @change="fillTable()" />
         </div>
       </v-col>
       <!--End of user inputs -->
@@ -332,13 +347,13 @@ export default {
 </script>
 
 <style>
-.v-select {
+.vAuto {
     width:250px;
     color:"red";
 
 }
 
-.v-list {
+.vList {
   height: 200px;
   overflow-y: auto;
 }
