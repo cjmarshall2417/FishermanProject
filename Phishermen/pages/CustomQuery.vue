@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="advancedDisplay">
-      <v-text-field v-model="queryName" label="Enter a Name for Your Query" style="width: 700px" />
+      <v-text-field v-model="queryName" label="Enter a Name for Your Query" style="width='700px'" />
       <v-btn @click="saveQuery()">
         Save Query
       </v-btn>
@@ -13,8 +13,9 @@
         label="Select a user query."
         @change="fillTable(selectedUserQuery)"
       />
-
-      <p>{{ completeURL }}</p>
+      <span>Selected User Query URL: {{selectedUserQuery}}</span>
+      <br>
+      <p>Current Query URL: {{ completeURL }}</p>
       <v-btn @click="fillTable()">
         Refresh Table
       </v-btn>
@@ -27,6 +28,18 @@
       Reset
     </v-btn>
     <v-row>
+      <v-col>
+        <v-list>-
+          <v-subheader>Filters(Click to Remove):</v-subheader>
+          <v-list-item-group v-model="selectedFilter">
+            <v-list-item v-for="(item, i) in filters" :key="i" :value="item.Value" @click="removeFilter(item.Value)">
+              <v-list-item-content>
+                <v-list-item-title v-text="item.Text" />
+              </v-list-item-content>
+            </v-list-item>
+          </v-list-item-group>
+        </v-list>
+      </v-col>
       <v-col>
         <v-autocomplete v-model="selectedYear" :items="validYears" label="Select a Year" />
 
@@ -101,39 +114,9 @@
     <br>
     <div v-if="!groupedDisplay">
       <v-data-table :items="customQueryResults" :headers="headers" />
-      <br>
-      <table>
-        <tr>
-          <th>Year</th>
-          <th>Month</th>
-          <th>Area Number</th>
-          <th>Area Name</th>
-          <th>Fish Caught</th>
-          <th>System</th>
-          <th>Region</th>
-        </tr>
-        <tr v-for="(haul,index) in customQueryResults" :key="index">
-          <td>{{ haul["year"] }}</td>
-          <td>{{ haul["month"] }}</td>
-          <td>{{ haul["areaNumber"] }}</td>
-          <td>{{ haul["areaName"] }}</td>
-          <td>{{ haul["fishCaught"] }}</td>
-          <td>{{ haul["system"] }}</td>
-          <td>{{ haul["region"] }}</td>
-        </tr>
-      </table>
     </div>
     <div v-else>
-      <table>
-        <tr>
-          <th>Group Key</th>
-          <th>Fish Caught</th>
-        </tr>
-        <tr v-for="(haul,index) in customQueryResults" :key="index">
-          <td>{{ haul["groupKey"] }}</td>
-          <td>{{ haul["fishCaught"] }}</td>
-        </tr>
-      </table>
+      <v-data-table :items="customQueryResults" :headers="groupHeaders" />
     </div>
   </div>
 </template>
@@ -153,6 +136,11 @@ export default {
         { text: 'Fish Caught', value: 'fishCaught' },
         { text: 'System', value: 'system' },
         { text: 'Region', value: 'region' }
+      ],
+
+      groupHeaders: [
+        { text: 'Group Name', value: 'groupKey' },
+        { text: 'Fish Caught', value: 'fishCaught' }
       ],
 
       baseURL: '../api/CustomQuery?',
@@ -177,6 +165,7 @@ export default {
       saveQueryURL: '../api/SaveQuery?queryURL=',
       getUserQueriesURL: '../api/GetUserQueries',
       userQueries: [],
+      filters: [],
 
       advancedDisplay: false,
       groupedDisplay: false,
@@ -192,6 +181,7 @@ export default {
       selectedSort: 'Ascending',
       selectedSortBy: 'AreaNumber',
       selectedGroupSortBy: 'Group Name',
+      selectedFilter: null,
       haulGreaterThan: 0,
       haulLessThan: 10000,
       rows: 1000
@@ -276,15 +266,32 @@ export default {
     },
 
     addFilter (filterType, value) {
-      this.url += filterType + '=' + value + '&'
-      this.fillTable()
+      const filterText = filterType + '=' + value + '&'
 
-      // code taken from https://stackoverflow.com/questions/9539723/javascript-to-select-first-option-of-select-list
-      const selectTags = document.body.getElementsByTagName('select')
-
-      for (let i = 0; i < selectTags.length; i++) {
-        selectTags[i].selectedIndex = '0'
+      // this little bit is so we display the month name in the list of filters instead of the month number
+      if (filterType === 'months') {
+        value = this.months[value - 1]
       }
+      // and this bit is to display an area name and number instead of just the number which is confusing
+      if (filterType === 'areaNumbers') {
+        const rightAreaNumber = element => element.areaNumber === value
+        const index = this.validAreas.findIndex(rightAreaNumber)
+        value = this.validAreas[index].areaNumber + ': ' + this.validAreas[index].areaName
+      }
+      // this looks kind of dumb but it's intentional
+      // in the listbox we want to show the value that's being filtered
+      // but we need the full string in the background to remove it from the url
+      const filter = { Text: value, Value: filterText }
+
+      this.filters.push(filter)
+      this.url += filterText
+      this.fillTable()
+    },
+
+    removeFilter (filter) {
+      this.filters = this.filters.filter(e => e.Value !== filter)
+      this.url = this.url.replace(filter, '')
+      this.fillTable()
     },
 
     saveQuery () {
@@ -322,3 +329,16 @@ export default {
 
 }
 </script>
+
+<style>
+.v-select {
+    width:250px;
+    color:"red";
+
+}
+
+.v-list {
+  height: 200px;
+  overflow-y: auto;
+}
+</style>

@@ -6,7 +6,7 @@
 export default {
   name: '',
   asyncData ({ redirect }) {
-    return redirect('')
+    return redirect('/')
   }
 }
 </script>
