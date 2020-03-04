@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!--This is stuff most users wouldn't care about and the page is already too bloated so all this hidden unless a button is clicked -->
     <div v-if="advancedDisplay">
       <v-text-field v-model="queryName" label="Enter a Name for Your Query" style="width='700px'" />
       <v-btn @click="saveQuery()">
@@ -13,14 +14,14 @@
         label="Select a user query."
         @change="fillTable(selectedUserQuery)"
       />
-      <span>Selected User Query URL: {{selectedUserQuery}}</span>
+      <span>Selected User Query URL: {{ selectedUserQuery }}</span>
       <br>
       <p>Current Query URL: {{ completeURL }}</p>
       <v-btn @click="fillTable()">
         Refresh Table
       </v-btn>
       <br>
-    </div>
+    </div> <!--End of v-if"advancedDisplay" -->
     <v-btn @click="advancedDisplay = !advancedDisplay">
       Advanced Display
     </v-btn>
@@ -29,7 +30,8 @@
     </v-btn>
     <v-row>
       <v-col>
-        <v-list>-
+        <!-- The list of current filters -->
+        <v-list>
           <v-subheader>Filters(Click to Remove):</v-subheader>
           <v-list-item-group v-model="selectedFilter">
             <v-list-item v-for="(item, i) in filters" :key="i" :value="item.Value" @click="removeFilter(item.Value)">
@@ -40,6 +42,7 @@
           </v-list-item-group>
         </v-list>
       </v-col>
+      <!-- Start of User Inputs -->
       <v-col>
         <v-autocomplete v-model="selectedYear" :items="validYears" label="Select a Year" />
 
@@ -103,6 +106,7 @@
       </v-col>
 
       <v-col>
+        <!-- We need to display different sorts depending on whether or not the current query is using a group by -->
         <div v-if="groupedDisplay">
           <v-select v-model="selectedGroupSortBy" :items="validGroupSortBy" label="Select Column To Sort By" @change="fillTable()" />
         </div>
@@ -110,8 +114,11 @@
           <v-autocomplete v-model="selectedSortBy" :items="validSortBy" label="Select Column To Sort By" @change="fillTable()" />
         </div>
       </v-col>
+      <!--End of user inputs -->
     </v-row>
     <br>
+    <!-- Here is where we display our query results -->
+    <!-- This is to display different column headers based on whether a query is using a group by -->
     <div v-if="!groupedDisplay">
       <v-data-table :items="customQueryResults" :headers="headers" />
     </div>
@@ -126,8 +133,9 @@ export default {
 
   data () {
     return {
+      // holds the data we get back from axios calls to the API
       customQueryResults: [],
-
+      // column headers for dataTables
       headers: [
         { text: 'Year', value: 'year' },
         { text: 'Month', value: 'month' },
@@ -142,34 +150,41 @@ export default {
         { text: 'Group Name', value: 'groupKey' },
         { text: 'Fish Caught', value: 'fishCaught' }
       ],
-
+      // baseURL contains the default URL that we use at the start
       baseURL: '../api/CustomQuery?',
+      // url is the "current" url with filters and what not added
       url: '../api/CustomQuery?',
+      // used when converting a month number to a month name
       months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-
+      // these are used to populate inputs by calling the api to get the data using the given URL and
+      // then saving the data in the appropriate array
       validYears: [],
-      validYearsURL: 'GetYears',
+      validYearsURL: '../api/GetYears',
       validMonths: [],
-      validMonthsURL: 'GetMonths',
+      validMonthsURL: '../api/GetMonths',
       validAreas: [],
       validAreasURL: '../api/GetAreas',
       validRegions: [],
       validRegionsURL: '../api/GetRegions',
       validSystems: [],
       validSystemsURL: '../api/GetSystems',
+      // hard coded values used to populate inputs
       validGroupBys: ['None', 'Date', 'Year', 'Month', 'AreaNumber', 'System', 'Region'],
       validAggregates: ['Sum', 'Average', 'Max', 'Min'],
       validSorts: ['Ascending', 'Descending'],
       validSortBy: ['Year', 'Month', 'System', 'AreaNumber', 'Region', 'FishCaught'],
       validGroupSortBy: ['Group Name', 'Fish Caught'],
+      // used when retrieving and displaying user made queries from the database
       saveQueryURL: '../api/SaveQuery?queryURL=',
       getUserQueriesURL: '../api/GetUserQueries',
       userQueries: [],
+      // holds the filters applied to the current query
       filters: [],
-
+      // toggles the display or certain portions of the page
       advancedDisplay: false,
       groupedDisplay: false,
       queryName: '',
+      // holds the values selected by the user using the page inputs
       selectedRegion: null,
       selectedArea: null,
       selectedMonth: 'Select A Month',
@@ -187,7 +202,7 @@ export default {
       rows: 1000
     }
   },
-
+  // this calculates the full URL to be used to call the controller
   computed: {
     completeURL () {
       // v-btns to add filters that can have multiple values are fine but some
@@ -209,6 +224,7 @@ export default {
     }
 
   },
+  // populates all our inputs on page load
   mounted () {
     this.fillTable()
     this.getYears()
@@ -219,6 +235,7 @@ export default {
     this.getUserQueries()
   },
   methods: {
+    // gets the data from the current query and displays it in the appropriate data table.
     fillTable (url = '') {
       if (url === '') {
         url = this.completeURL
@@ -233,8 +250,8 @@ export default {
       this.$axios.$get(url)
         .then((value) => { this.customQueryResults = value })
     },
-
-    // I hate having all these different functions but I don't know how to do something like a C# out keyword in javascript.
+    // populates inputs with proper values from the database
+    // I hate having all these different functions but I don't know how to do something like a C# out parameter in javascript.
     getYears () {
       this.$axios.$get(this.validYearsURL)
         .then((value) => { this.validYears = value })
@@ -264,7 +281,7 @@ export default {
       this.$axios.$get(this.getUserQueriesURL)
         .then((value) => { this.userQueries = value })
     },
-
+    // adds a chosen filter to our list of filters and the actual query url
     addFilter (filterType, value) {
       const filterText = filterType + '=' + value + '&'
 
@@ -287,13 +304,13 @@ export default {
       this.url += filterText
       this.fillTable()
     },
-
+    // removes a filter from the url/filter list and displays the new results
     removeFilter (filter) {
       this.filters = this.filters.filter(e => e.Value !== filter)
       this.url = this.url.replace(filter, '')
       this.fillTable()
     },
-
+    // this saves the current query with the user given name to the database
     saveQuery () {
       const url = this.completeURL
       const queryName = this.queryName
@@ -302,31 +319,15 @@ export default {
       alert(finalURL)
       this.$axios.post(finalURL).then((value) => { alert('Query Saved') })
     },
-
+    // resets the URL back to the default URL and removes all filters
     resetURL () {
       this.url = this.baseURL
       this.selectedSortBy = 'AreaNumber'
       this.selectedGroupBy = 'None'
+      this.filters = []
       this.fillTable()
-    },
-
-    buildCompleteURL () {
-      // v-btns to add filters that can have multiple values are fine but some
-      // values should only appear once so this code adds all the values you can only have once to the url
-      let url = this.url + 'haulGreaterThan=' + this.haulGreaterThan + '&'
-      url += 'haulLessThan=' + this.haulLessThan + '&'
-      url += 'rows=' + this.rows + '&'
-      url += 'groupBy=' + this.selectedGroupBy + '&'
-      if (this.selectedAggregate === 'Average') {
-        url += 'average=true&'
-      } else {
-        url += 'average=false&'
-      }
-
-      return url
     }
   }
-
 }
 </script>
 

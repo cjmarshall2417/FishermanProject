@@ -49,7 +49,8 @@ namespace Fishermen.Controllers
 
 
 
-
+        //Given a list of systems and a month this returns the areas in those systems that have the best
+        //average haul during that month
         [HttpPost]
         [Route("api/BestPlaceToFishDuringMonth")]
         public IActionResult BestPlaceToFishDuringMonth(string[] listOfSystems, int month, int rows = 10)
@@ -75,7 +76,9 @@ namespace Fishermen.Controllers
             return Json(topAreas);
         }
 
-        //tells you when the best time to fish in a certain area is
+        //this shows the average haul per month in a given area.
+        //the returned data is ordered by Month rather than FishCaught
+        //to make it easier to display.
         [HttpGet]
         [Route("api/BestMonthInArea")]
         public IActionResult BestMonthInArea(int areaNumber)
@@ -107,6 +110,7 @@ namespace Fishermen.Controllers
             return Json(result);
         }
 
+        //this finds the 10 areas in a given region that have the highest average haul.
         [HttpGet]
         [Route("api/RegionTopTenAreas")]
         public IActionResult RegionTopTenArea(string regionName)
@@ -143,7 +147,8 @@ namespace Fishermen.Controllers
 
         }
 
-        //returns a list of all areas, include number and name because name is not a unique identifier
+        //returns a list of all areas, include number and name because name is not a unique identifier but number by itself
+        //isn't very helpful
         [HttpGet]
         [Route("api/GetAreas")]
         public IActionResult GetAreas()
@@ -182,8 +187,8 @@ namespace Fishermen.Controllers
         }
 
         //returns a list of all valid years, years that occur at least once in the database.
-        //since this database won't be changed I will just hardcode the valid values based on what's currently in the database
-        //for performance reasons. For a database that was being updated/changed you would need a different approach
+        //since this database won't be changed I will just hardcode the valid values based on what's currently in the database.
+        //For a database that was being updated/changed you would need a different approach
         //to account for more valid years being added.
         [HttpGet]
         [Route("api/GetYears")]
@@ -197,7 +202,9 @@ namespace Fishermen.Controllers
             }
             return Json(validYears);
         }
-
+        //gets all the queries that have been saved by previous users
+        //this is necessary to populate a select that lets user see the results of
+        //these saved queries
         [HttpGet]
         [Route("api/GetUserQueries")]
         public IActionResult GetUserQueries()
@@ -205,6 +212,7 @@ namespace Fishermen.Controllers
             return Json(fishHauls.TblQueries);
         }
 
+        //returns a list of valid Months for populating inputs in the front end
         [HttpGet]
         [Route("api/GetMonths")]
         public IActionResult GetMonths()
@@ -318,9 +326,12 @@ namespace Fishermen.Controllers
                 //it doesn't seem worth the hassle and more confusing layout.
                 if (groupBy == "Date")
                 {
+                    //Concatenate Month and Year to create a Date field
                     var formattedData = allData.Select(h => new { Date = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(h.Month) + " " + h.Year.ToString(), FishCaught = h.FishCaught });
                     var groupedData = formattedData.ToList().GroupBy(g => g.Date);//the linq query breaks if I don't use ToList before the group by
-                                                                                  
+                    
+                    //this groups our data by date and then finds the appropriate aggregate value based on
+                    //the string passed in the URL
                     var result = groupedData.Select(g => new
                     {
                         GroupKey = g.Key,
@@ -333,11 +344,12 @@ namespace Fishermen.Controllers
                             _ => g.Sum(h => h.FishCaught)
                         }
                     });
-
+                    //this decides which column to sort by, and in which order
                     result = sortAscending switch
                     {
                         true => sortBy switch
                         {
+                            //we need to unconcatenate date so we can orderBy year and then by month
                             "Group Name" => result.OrderBy(g => g.GroupKey.ToString().Split()[1]).ThenBy(g => Array.IndexOf(validMonths, g.GroupKey.ToString().Split()[0])),
                             "Fish Caught" => result.OrderBy(g => g.FishCaught),
                             _ => result.OrderBy(g => g.GroupKey)
@@ -355,8 +367,8 @@ namespace Fishermen.Controllers
                 //can use reflection for all groupBys other than date
                 else
                 {
+                    //groups on whatever column was chosen by the groupBy parameter in the URL used to access this method
                     var groupedData = allData.ToList().GroupBy(h => h.GetType().GetProperty(groupBy).GetValue(h, null));
-
                     var result = groupedData.Select(g => new
                     {
                         GroupKey = g.Key,
@@ -395,6 +407,7 @@ namespace Fishermen.Controllers
             {
                 if (sortAscending)
                 {
+                    //chooses the correct column to orderBy using reflection
                     var sortedData = allData.ToList().OrderBy(h => h.GetType().GetProperty(sortBy).GetValue(h));
                     return Json(sortedData.Take(rows));
                 }
@@ -404,13 +417,15 @@ namespace Fishermen.Controllers
                     return Json(sortedData.Take(rows));
                 }
             }
-
+            
+            //this shouldn't be hit, it means something went wrong with our URL
             return Json(allData.Take(rows));
             
         }
         
 
-
+        //this saves a user made queries Name and URL to the database so
+        //users can resuse them later.
         [HttpPost]
         [Route("api/SaveQuery")]
         public void SaveQuery(string queryURL, string queryName) {
@@ -428,18 +443,5 @@ namespace Fishermen.Controllers
         {
             return HttpContext.Request.Path.Value + HttpContext.Request.QueryString.Value;
         }
-
-        public class Group
-        {
-            public string GroupKey;
-            public int FishCaught;
-            public Group(string groupKey, int fishCaught)
-            {
-                this.GroupKey = groupKey;
-                this.FishCaught = fishCaught;
-            }
-        }
-
-       
     }
 }
